@@ -2,8 +2,8 @@
 
 频率派和贝叶斯派提供了两种不同的将概率的概念引入机器学习模型的方法。
 
-对于一系列采样自数据分布 $P_{data}$ 的样本数据 $x$，建模一个参数为 $\theta$ 的机器学习模型，频率派将 $\theta$ 看作一个未知的常量，其经典的参数估计方式是通过极大似然估计（MLE）：
-$$\theta_{MLE}=\arg\max_\theta\sum\log P(x|\theta)$$
+对于一系列采样自数据分布 $P_{data}$ 的样本数据 $X=(x_1,x_2,\dotsb,x_N)$，建模一个参数为 $\theta$ 的机器学习模型，频率派将 $\theta$ 看作一个未知的常量，其经典的参数估计方式是通过极大似然估计（MLE）：
+$$\theta_{MLE}=\arg\max_\theta\prod_i p(x_i|\theta)=\arg\max_\theta\sum_i\log p(x_i|\theta)$$
 
 因此**频率派的模型最终可以转化为一个优化问题**。
 
