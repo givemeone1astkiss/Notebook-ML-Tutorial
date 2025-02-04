@@ -1,4 +1,4 @@
-# Fundamental Math---Gaussian Distribution
+# Fundamental Math —— Gaussian Distribution
 
 ## 1 Maximum Likelihood Estimate（MLE）
 

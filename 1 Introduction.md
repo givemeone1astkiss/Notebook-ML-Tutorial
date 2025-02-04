@@ -1,4 +1,4 @@
-# Introduction---Frequentists vs Bayesians
+# Introduction —— Frequentists vs Bayesians
 
 频率派和贝叶斯派提供了两种不同的将概率的概念引入机器学习模型的方法。
 
