@@ -157,7 +157,7 @@ $$\begin{aligned}
 \end{aligned}$$
 
 那么可以写出；
-$$Z\sim\mathcal{N}\left(\begin{bmatrix}\mu\\A\mu+B\end{bmatrix},\begin{bmatrix}\Lambda^{-1}&\Delta\\\Delta&A\Lambda^{-1}A^\top+L^{-1}\\\end{bmatrix}\right)$$
+$$Z\sim\mathcal{N}\left(\begin{bmatrix}\mu\\A\mu+B\end{bmatrix},\begin{bmatrix}\Lambda^{-1}&\Delta\\\Delta^\top&A\Lambda^{-1}A^\top+L^{-1}\\\end{bmatrix}\right)$$
 
 $$\begin{aligned}
     \Delta&=\mathrm{Cov}(X,Y)\\
