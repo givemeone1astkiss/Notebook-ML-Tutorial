@@ -12,7 +12,7 @@
 ## 2 Perceptron Algorithm
 
 感知机模型是一类硬分类模型，可以简单地表示为：
-$$f(x)=\mathrm{sign}(W^\top x),x\in\mathbb{R}^p,W\in\mathbb{R}^p$$
+$$f(x)=\mathrm{sign}(w^\top x),x\in\mathbb{R}^p,w\in\mathbb{R}^p$$
 
 其中 $\mathrm{sign}(\sdot)$ 表示符号函数：
 $$\mathrm{sign}(a)=\begin{cases}
@@ -21,12 +21,12 @@ $$\mathrm{sign}(a)=\begin{cases}
 \end{cases}$$
 
 现在考虑应该使用何种形式的损失函数，一种想法是使用被错误分类的点的个数作为损失函数：
-$$\mathcal{L}(W)=\sum_{i=1}^N I\{y_iW^\top x_i<0\}$$
+$$\mathcal{L}(w)=\sum_{i=1}^N I\{y_iw^\top x_i<0\}$$
 
 $I$ 表示指示函数，当 $\{\}$ 中的条件满足时，其值为 1，否则为 0。这种表示方式的弊端是指示函数是一个简单的二值函数，不可微，因此难以优化。因此感知机采用以下的函数：
-$$\mathcal{L}(W)=\sum_{x_i\in D}-y_iW^\top x_i\\D:\{被错分的样本\}$$
+$$\mathcal{L}(w)=\sum_{x_i\in D}-y_iw^\top x_i\\D:\{被错分的样本\}$$
 
-$$\nabla_W\mathcal{L}=-y_ix_i$$
+$$\nabla_w\mathcal{L}=-y_ix_i$$
 
 然后使用常规的随机梯度下降进行优化。
 
@@ -38,37 +38,37 @@ LDA 是一类基于降维的分类模型，其将样本点投影至一维空间�
 
 我们定义 $X_1=\{x_i|y_i=1\}$，$X_2=\{x_i|y_i=-1\}$，且 $|X_1|=N_1$，$|X_2|=N_2$，$N=N_1+N_2$。
 
-定义经投影矩阵 $W$ 投影之后所得实数矩阵为 $Z$，其中 $Z_1=\{z_i=W^\top x_i|y_i=1\}$，$Z_2=\{z_i=W^\top x_i|y_i=2\}$，定义其样本均值分别为 $\bar{z}_1$、$\bar{z}_2$，样本方差分别为 $\sigma_1^2$、$\sigma_2^2$：
+定义经投影向量 $w$ 投影之后所得实数矩阵为 $Z$，其中 $Z_1=\{z_i=w^\top x_i|y_i=1\}$，$Z_2=\{z_i=w^\top x_i|y_i=2\}$，定义其样本均值分别为 $\bar{z}_1$、$\bar{z}_2$，样本方差分别为 $\sigma_1^2$、$\sigma_2^2$：
 $$\bar{z}_k=\frac{1}{N_k}\sum_{z_i\in Z_k}z_i$$
 
-$$\sigma^2_k=\frac{1}{N_k}\sum_{z_i\in Z_k}(z_i-\bar{z}_k)^2=\frac{1}{N_k}\sum_{x_i\in X_k}(W^\top x_i-\bar{z}_k)(W^\top x_i-\bar{z}_k)^\top$$
+$$\sigma^2_k=\frac{1}{N_k}\sum_{z_i\in Z_k}(z_i-\bar{z}_k)^2=\frac{1}{N_k}\sum_{x_i\in X_k}(w^\top x_i-\bar{z}_k)(w^\top x_i-\bar{z}_k)^\top$$
 
 LDA 进行投影遵循“高内聚，低耦合”的规则，以 $(\bar{z}_1-\bar{z}_2)^2$ 衡量耦合程度，以 $\sigma^2_1+\sigma^2_2$ 衡量内聚程度，因此优化目标可以表示为：
-$$\mathcal{J}(W)=\frac{(\bar{z}_1-\bar{z}_2)^2}{\sigma^2_1+\sigma^2_2}$$
+$$\mathcal{J}(w)=\frac{(\bar{z}_1-\bar{z}_2)^2}{\sigma^2_1+\sigma^2_2}$$
 
 对分子进行化简：
 $$\begin{aligned}
     \left(\bar{z}_1-\bar{z}_2\right)^2&=\left(\frac{1}{N_1}\sum_{z_i\in Z_1}z_i-\frac{1}{N_2}\sum_{z_i\in Z_2}z_i\right)^2\\
-    &=\left(\frac{1}{N_1}\sum_{x_i\in X_1}W^\top x_i-\frac{1}{N_2}\sum_{x_i\in X_2}W^\top x_i\right)^2\\
-    &=\left(\frac{1}{N_1}\sum_{x_i\in X_1}W^\top x_i-\frac{1}{N_2}\sum_{x_i\in X_2}W^\top x_i\right)^2\\
-    &=\left(W^\top(\bar{x}_1-\bar{x}_2)\right)^2\\
-    &=W^\top(\bar{x}_1-\bar{x}_2)(\bar{x}_1-\bar{x}_2)^\top W\\
+    &=\left(\frac{1}{N_1}\sum_{x_i\in X_1}w^\top x_i-\frac{1}{N_2}\sum_{x_i\in X_2}w^\top x_i\right)^2\\
+    &=\left(\frac{1}{N_1}\sum_{x_i\in X_1}w^\top x_i-\frac{1}{N_2}\sum_{x_i\in X_2}w^\top x_i\right)^2\\
+    &=\left(w^\top(\bar{x}_1-\bar{x}_2)\right)^2\\
+    &=w^\top(\bar{x}_1-\bar{x}_2)(\bar{x}_1-\bar{x}_2)^\top w\\
 \end{aligned}$$
 
 对分母进行化简，由于：
 $$\begin{aligned}
-    \sigma^2_k&=\frac{1}{N_k}\sum_{x_i\in X_k}(W^\top x_i-\bar{z}_k)(W^\top x_i-\bar{z}_k)^\top\\
-    &=\frac{1}{N_k}\sum_{x_i\in X_k}(W^\top x_i-\frac{1}{N_k}\sum_{x_j\in X_k}W^\top x_j)(W^\top x_i-\frac{1}{N_k}\sum_{x_j\in X_k}W^\top x_j)^\top\\
-    &=\frac{1}{N_k}\sum_{x_i\in X_k}W^\top(x_i-\bar{x}_k)(x_i-\bar{x}_k)^\top W\\
-    &=W^\top\frac{1}{N_k}\sum_{x_i\in X_k}(x_i-\bar{x}_k)(x_i-\bar{x}_k)^\top W\\
-    &=W^\top\sigma_{X_k}^2W\\
+    \sigma^2_k&=\frac{1}{N_k}\sum_{x_i\in X_k}(w^\top x_i-\bar{z}_k)(w^\top x_i-\bar{z}_k)^\top\\
+    &=\frac{1}{N_k}\sum_{x_i\in X_k}(w^\top x_i-\frac{1}{N_k}\sum_{x_j\in X_k}w^\top x_j)(w^\top x_i-\frac{1}{N_k}\sum_{x_j\in X_k}w^\top x_j)^\top\\
+    &=\frac{1}{N_k}\sum_{x_i\in X_k}w^\top(x_i-\bar{x}_k)(x_i-\bar{x}_k)^\top w\\
+    &=w^\top\frac{1}{N_k}\sum_{x_i\in X_k}(x_i-\bar{x}_k)(x_i-\bar{x}_k)^\top w\\
+    &=w^\top\sigma_{X_k}^2w\\
 \end{aligned}$$
 
 因此：
-$$\sigma^2_1+\sigma^2_2=W^\top(\sigma_{X_1}^2+\sigma_{X_2}^2)W$$
+$$\sigma^2_1+\sigma^2_2=w^\top(\sigma_{X_1}^2+\sigma_{X_2}^2)w$$
 
 优化目标可以简化为：
-$$\mathcal{J}(W)=\frac{W^\top(\bar{x}_1-\bar{x}_2)(\bar{x}_1-\bar{x}_2)^\top W}{W^\top(\sigma_{X_1}^2+\sigma_{X_2}^2)W}$$
+$$\mathcal{J}(w)=\frac{w^\top(\bar{x}_1-\bar{x}_2)(\bar{x}_1-\bar{x}_2)^\top w}{w^\top(\sigma_{X_1}^2+\sigma_{X_2}^2)w}$$
 
 为了方便使用以下记号：
 $$S_b=(\bar{x}_1-\bar{x}_2)(\bar{x}_1-\bar{x}_2)^\top$$
@@ -76,24 +76,24 @@ $$S_b=(\bar{x}_1-\bar{x}_2)(\bar{x}_1-\bar{x}_2)^\top$$
 $$S_w=\sigma_{X_1}^2+\sigma_{X_2}^2$$
 
 因此：
-$$\mathcal{J}(W)=\frac{W^\top S_b W}{W^\top S_w W}=(W^\top S_b W)(W^\top S_w W)^{-1}$$
+$$\mathcal{J}(w)=\frac{w^\top S_b w}{w^\top S_w w}=(w^\top S_b w)(w^\top S_w w)^{-1}$$
 
-$$\frac{\partial \mathcal{J}(W)}{\partial W}=(2S_bW)(W^\top S_w W)^{-1}-(W^\top S_b W)(W^\top S_w W)^{-2}(2S_wW)$$
+$$\frac{\partial \mathcal{J}(w)}{\partial w}=(2S_bw)(w^\top S_w w)^{-1}-(w^\top S_b w)(w^\top S_w w)^{-2}(2S_ww)$$
 
-令 $\frac{\partial \mathcal{J}(W)}{\partial W}=0$ 得；
+令 $\frac{\partial \mathcal{J}(w)}{\partial w}=0$ 得；
 $$\begin{aligned}
-    (2S_bW)(W^\top S_w W)^{-1}-(W^\top S_b W)(W^\top S_w W)^{-2}(2S_wW)&=0\\
-    S_bWW^\top S_w W&=W^\top S_b WS_wW\\
-    S_wW&=\frac{W^\top S_w W}{W^\top S_b W}\sdot S_bW\\
-    W&=\frac{W^\top S_w W}{W^\top S_b W}\sdot S_w^{-1}S_bW\\
-    W&=\frac{W^\top S_w W}{W^\top S_b W}\sdot S_w^{-1}(\bar{x}_1-\bar{x}_2) [(\bar{x}_1-\bar{x}_2)^\top W]\\
+    (2S_bw)(w^\top S_w w)^{-1}-(w^\top S_b w)(w^\top S_w w)^{-2}(2S_ww)&=0\\
+    S_bww^\top S_w w&=w^\top S_b wS_ww\\
+    S_ww&=\frac{w^\top S_w w}{w^\top S_b w}\sdot S_bw\\
+    w&=\frac{w^\top S_w w}{w^\top S_b w}\sdot S_w^{-1}S_bw\\
+    w&=\frac{w^\top S_w w}{w^\top S_b w}\sdot S_w^{-1}(\bar{x}_1-\bar{x}_2) [(\bar{x}_1-\bar{x}_2)^\top w]\\
     &=\lambda S_w^{-1}(\bar{x}_1-\bar{x}_2),\lambda\in\mathbb{R}\\
 \end{aligned}$$
 
-由于 W 为一个投影矩阵，我们实际上只关心其方向，所以 $\lambda$ 的值其实并不重要，我们可以得出结论：
-$$W\propto S_w^{-1}(\bar{x}_1-\bar{x}_2)=(\sigma_{X_1}^2+\sigma_{X_2}^2)^{-1}(\bar{x}_1-\bar{x}_2)$$
+由于 w 为一个投影向量，我们实际上只关心其方向，所以 $\lambda$ 的值其实并不重要，我们可以得出结论：
+$$w\propto S_w^{-1}(\bar{x}_1-\bar{x}_2)=(\sigma_{X_1}^2+\sigma_{X_2}^2)^{-1}(\bar{x}_1-\bar{x}_2)$$
 
-当 $S_w=I$ 时，或各特征具有各向同性时，我们认为：$W\propto (\bar{x}_1-\bar{x}_2)$
+当 $S_w=I$ 时，或各特征具有各向同性时，我们认为：$w\propto (\bar{x}_1-\bar{x}_2)$
 
 ## 4 Logistic Regression
 
@@ -105,10 +105,10 @@ $$P(y|x)=P(y=1|x)^{y}P(y=0|x)^{1-y}$$
 
 MLE 优化目标可以写作：
 $$\begin{aligned}
-    W^*&=\arg\max_W\log P(Y|X)\\
-    &=\arg\max_W \sum_{i=1}^N p(y_i|x_i)\\
-    &=\arg\max_W \sum_{i=1}^N [y_i\log p(y_i=1|x_i)+(1-y_i)p(y_i=0|x_i)]\\
-    &=\arg\max_W \sum_{i=1}^N [y_i\log \phi(x_i;W)+(1-y_i)\log(1-\phi(x_i;W))]\\
+    w^*&=\arg\max_w\log P(Y|X)\\
+    &=\arg\max_w \sum_{i=1}^N p(y_i|x_i)\\
+    &=\arg\max_w \sum_{i=1}^N [y_i\log p(y_i=1|x_i)+(1-y_i)p(y_i=0|x_i)]\\
+    &=\arg\max_w \sum_{i=1}^N [y_i\log \phi(x_i;w)+(1-y_i)\log(1-\phi(x_i;w))]\\
 \end{aligned}$$
 
 由于实际优化过程中倾向于最小化而非最大化，对上式取负号即得**交叉熵损失**，然后通过随机梯度下降优化。

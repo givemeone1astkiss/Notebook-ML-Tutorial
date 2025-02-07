@@ -73,7 +73,7 @@ $$T=HXX^\top H^\top=(U\Sigma_X V^\top)(U\Sigma_X V^\top)^\top=U\Sigma_X^2U^\top$
 
 而投影坐标矩阵可以表示为 $HXV=U\Sigma_X V^\top V=U\Sigma_X$。
 
-这种分析方式称为主坐标分析（PCoA），矩阵 $T$ 称为相异度矩阵，在上述过程中，相异度矩阵基于余弦相似度构建，实际上 PCoA 过程还支持以其他度量构建相异度矩阵，例如欧氏距离或马氏距离。
+这种分析方式称为主坐标分析（PCoA）。
 
 ## P-PCA
 
