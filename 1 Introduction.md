@@ -23,11 +23,11 @@ $$\theta_{MAP}=\arg\max_\theta P(\theta|x)=\arg\max_\theta \frac{P(x|\theta)P(\t
 类似于一个带有先验的极大似然估计。
 
 而贝叶斯估计与极大后验估计不同，贝叶斯估计不是寻找一个单一的最佳参数值，而是计算参数在整个可能取值范围上的完整后验分布。这意味着贝叶斯估计提供的是关于参数不确定性的全貌，而不是仅仅给出一个最优估计值。
-$$P(\theta|x)=\frac{P(x|\theta)P(\theta)}{P(x)}=\frac{P(x|\theta)P(\theta)}{\int_\theta P(x|\theta)P(\theta)\mathrm{d}\theta}$$
+$$P(\theta|x)=\frac{P(x|\theta)P(\theta)}{P(x)}=\frac{P(x|\theta)P(\theta)}{\int_\theta P(x|\theta)P(\theta)\,\mathrm{d}\theta}$$
 
-这意味着贝叶斯估计的关键在于求解积分 $\int_\theta P(x|\theta)P(\theta)\mathrm{d}\theta$，也就是说**贝叶斯派的模型通常能够转化成一个求解积分的问题**。
+这意味着贝叶斯估计的关键在于求解积分 $\int_\theta P(x|\theta)P(\theta)\,\mathrm{d}\theta$，也就是说**贝叶斯派的模型通常能够转化成一个求解积分的问题**。
 
 如果我们能够建模后验分布 $P(\theta|x)$，那么我们就可以以之为桥梁，预测新的数据点产生自原数据分布的概率：
-$$P(\tilde{x}|x)=\int_\theta P(\tilde{x}|x,\theta)\mathrm{d}\theta=\int_\theta P(\tilde{x}|\theta)P(\theta|x)\mathrm{d}\theta$$
+$$P(\tilde{x}|x)=\int_\theta P(\tilde{x}|x,\theta)\,\mathrm{d}\theta=\int_\theta P(\tilde{x}|\theta)P(\theta|x)\,\mathrm{d}\theta$$
 
 此即贝叶斯预测的思想。
