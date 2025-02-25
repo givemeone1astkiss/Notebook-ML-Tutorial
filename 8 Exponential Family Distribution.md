@@ -3,8 +3,9 @@
 ## 1 Basic Concepts
 
 指数族分布是一类重要的概率分布，包括高斯分布、泊松分布、狄利克雷分布、Beta 分布等，一个指数族分布应该满足以下的形式：
-$$p(x|\eta) = h(x)\exp\left(\eta^T T(x) - A(\eta)\right)$$
-
+$$
+p(x|\eta) = h(x)\exp\left(\eta^T T(x) - A(\eta)\right)
+$$
 其中：
 
 - $x$ 是随机变量
@@ -29,7 +30,8 @@ $$
 
 通过以下变形可以将其转换为指数族分布的标准形式：
 
-$$\begin{aligned}
+$$
+\begin{aligned}
     p(x|\mu, \sigma^2) &= \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{x^2 - 2x\mu + \mu^2}{2\sigma^2}\right)\\
     &= \exp(-\frac{1}{2}\log 2\pi\sigma^2) \exp\left(-\frac{x^2}{2\sigma^2} + \frac{x\mu}{\sigma^2} - \frac{\mu^2}{2\sigma^2}\right)\\
     &=\exp\left(\begin{pmatrix}
@@ -37,8 +39,8 @@ $$\begin{aligned}
     \end{pmatrix}\begin{pmatrix}
         x\\x^2
     \end{pmatrix} - (\frac{\mu^2}{2\sigma^2}+\frac{1}{2}\log 2\pi\sigma^2)\right)\\
-\end{aligned}$$
-
+\end{aligned}
+$$
 接下来，定义自然参数 $\eta$ 和其他相关组件：
 
 - **自然参数**：令 $\eta_1 = \frac{\mu}{\sigma^2}$ 和 $\eta_2 = -\frac{1}{2\sigma^2}$，因此 $\eta = \begin{pmatrix}
@@ -52,18 +54,21 @@ $$\begin{aligned}
 
 现在，我们把所有这些代入到指数族的标准形式中：
 
-$$p(x|\eta) = \underbrace{1}_{h(x)} \cdot \exp\left(\underbrace{\begin{pmatrix}
+$$
+p(x|\eta) = \underbrace{1}_{h(x)} \cdot \exp\left(\underbrace{\begin{pmatrix}
         \frac{\mu}{\sigma^2}&-\frac{1}{2\sigma^2}
     \end{pmatrix}}_{\eta}\underbrace{\begin{pmatrix}
         x\\x^2
-    \end{pmatrix}}_{T(x)} - \underbrace{(\frac{\mu^2}{2\sigma^2}+\frac{1}{2}\log 2\pi\sigma^2)}_{A(\eta)}\right)$$
+    \end{pmatrix}}_{T(x)} - \underbrace{(\frac{\mu^2}{2\sigma^2}+\frac{1}{2}\log 2\pi\sigma^2)}_{A(\eta)}\right)
+$$
 
 ## 3 Logarithmic Partition Function
 
 由于概率的归一化性质，指数族分布的形式中一定存在某种形式的约束，我们进行以下推导：
 
-$$\int h(x)\exp\left(\eta^T T(x) - A(\eta)\right)\,\mathrm{d}x = 1$$
-
+$$
+\int h(x)\exp\left(\eta^T T(x) - A(\eta)\right)\,\mathrm{d}x = 1
+$$
 对两边关于自然参数 $\eta$ 求导，得到：
 $$
 \int h(x) \exp\left(\eta^T T(x) - A(\eta)\right) (T(x) - \nabla_{\eta} A(\eta)) \,\mathrm{d}x = 0
@@ -126,8 +131,9 @@ $$
 
 对于指数族分布，$T(x)$ 与自然参数 $\eta$ 无关，因此$\nabla_{\eta} T(x) = 0$，从而：
 
-$$\nabla_{\eta} E[T(x)] = E[T(x)^2] - (\nabla_{\eta} A(\eta))^2$$
-
+$$
+\nabla_{\eta} E[T(x)] = E[T(x)^2] - (\nabla_{\eta} A(\eta))^2
+$$
 但是，因为 $E[T(x)] = \nabla_{\eta} A(\eta)$，所以：
 $$
 \nabla_{\eta}^2 A(\eta) = E[T(x)^2] - (E[T(x)])^2
@@ -147,8 +153,9 @@ $$
 $$
 
 我们的目标是找到使得对数似然函数最大的参数 $\eta$：
-$$\eta^*=\arg\max_\eta\mathcal{J}(\eta)$$
-
+$$
+\eta^*=\arg\max_\eta\mathcal{J}(\eta)
+$$
 将指数族分布的形式代入对数似然函数中：
 $$
 \begin{aligned}
@@ -199,17 +206,19 @@ $$
 
 根据最大熵原理，在所有满足已知约束条件的概率分布中，具有最大熵的分布是最无偏的，即它包含了最少的假设信息。给定一个离散随机变量 $X$ 可能取值于有限集合 $\{x_1, x_2, ..., x_n\}$，其概率分布为 $p(x_i)$。我们需要找到使熵最大的分布：
 $$
-H(p) = -\int p(x) \log p(x) \,\mathrm{d}x~~~\mathrm{s.t.}\int p(x)\,\mathrm{d}x = 1$$
+H(p) = -\int p(x) \log p(x) \,\mathrm{d}x~~~\mathrm{s.t.}\int p(x)\,\mathrm{d}x = 1
+$$
 
 使用拉格朗日乘数法解决这个问题。定义拉格朗日函数：
 $$
-\mathcal{L}(p, \lambda) = -\int p(x) \log p(x) \,\mathrm{d}x + \lambda \left(1 - \int p(x) \,\mathrm{d}x\right)
+\ell(p, \lambda) = -\int p(x) \log p(x) \,\mathrm{d}x + \lambda \left(1 - \int p(x) \,\mathrm{d}x\right)
 $$
 
 对 $p(x)$ 求变分并令其等于零：
 $$
-\frac{\delta \mathcal{L}}{\delta p(x)} = -\log p(x) - 1 - \lambda = 0
+\frac{\delta \ell}{\delta p(x)} = -\log p(x) - 1 - \lambda = 0
 $$
+
 解得：
 $$
 p(x) = e^{-1-\lambda}
@@ -238,20 +247,23 @@ $$
 
 假设我们知道一些充分统计量 $T_j(x)$ 的期望值 $E[T_j(x)] = t_j$，其中 $j = 1, 2, ..., m$。那么我们需要在满足以下约束的情况下最大化熵：
 
-$$H(p) = -\int p(x) \log p(x) \,\mathrm{d}x~~~\,\mathrm{s.t.}\,\begin{cases}
+$$
+H(p) = -\int p(x) \log p(x) \,\mathrm{d}x~~~\,\mathrm{s.t.}\,\begin{cases}
     \int p(x) \,\mathrm{d}x = 1\\
 \int p(x) T_j(x) \,\mathrm{d}x = t_j&\quad j = 1, 2, ..., m\\
-\end{cases}$$
+\end{cases}
+$$
 
 再次使用拉格朗日乘数法，定义拉格朗日函数：
 $$
-\mathcal{L}(p, \lambda, \alpha_j) = -\int p(x) \log p(x) \,\mathrm{d}x + \lambda \left(1 - \int p(x) \,\mathrm{d}x\right) + \sum_{j=1}^{m} \alpha_j \left(t_j - \int p(x) T_j(x) \,\mathrm{d}x\right)
+\ell(p, \lambda, \alpha_j) = -\int p(x) \log p(x) \,\mathrm{d}x + \lambda \left(1 - \int p(x) \,\mathrm{d}x\right) + \sum_{j=1}^{m} \alpha_j \left(t_j - \int p(x) T_j(x) \,\mathrm{d}x\right)
 $$
 
 对 $p(x)$ 求变分并令其等于零：
 $$
-\frac{\delta \mathcal{L}}{\delta p(x)} = -\log p(x) - 1 - \lambda - \sum_{j=1}^{m} \alpha_j T_j(x) = 0
+\frac{\delta \ell}{\delta p(x)} = -\log p(x) - 1 - \lambda - \sum_{j=1}^{m} \alpha_j T_j(x) = 0
 $$
+
 解得：
 $$
 p(x) = \exp\left(-1-\lambda - \sum_{j=1}^{m} \alpha_j T_j(x)\right)
@@ -261,12 +273,14 @@ $$
 $$
 p(x) = \exp\left(\eta^T T(x) - A(\eta)\right)
 $$
+
 这是指数族分布的标准形式，其中，$\eta$ 是拉格朗日乘数 $\alpha_j$ 的向量形式，$A(\eta)$ 是配分函数，确保分布归一化。
 
 通过归一化条件计算 $A(\eta)$：
 $$
 \int \exp\left(\eta^T T(x) - A(\eta)\right) \,\mathrm{d}x = 1
 $$
+
 从而：
 $$
 A(\eta) = \log \int \exp(\eta^T T(x)) \,\mathrm{d}x
