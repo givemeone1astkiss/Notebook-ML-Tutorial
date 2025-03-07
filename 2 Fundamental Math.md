@@ -4,7 +4,7 @@
 
 对于一系列数据点 $X=(x_1,\dotsb,x_N)^\top,x_i\in\mathbb{R}^p$，假设其服从高斯分布 $\mathcal{N}(\mu,\Sigma)$，即：
 $$
-p(x)=\frac{1}{\sqrt{2\pi}|\Sigma|^\frac{1}{2}}\exp(-\frac{1}{2}(x-\mu)^\top\Sigma^{-1}(x-\mu))
+p(x)=\frac{1}{(2\pi)^{\frac{p}{2}}\mid \Sigma\mid ^\frac{1}{2}}\exp(-\frac{1}{2}(x-\mu)^\top\Sigma^{-1}(x-\mu))
 $$
 
 首先考虑 $p=1$ 的情况，此时协方差矩阵 $\Sigma$ 退化为方差 $\sigma^2$：
@@ -15,7 +15,7 @@ $$
 使用 MLE 对 $\mu$ 和 $\sigma$ 进行估计，则有：
 $$
 \begin{aligned}
-    \log P(X|\theta)&=\sum_{i=1}^N\log p(x_i|\theta)\\
+    \log P(X\mid \theta)&=\sum_{i=1}^N\log p(x_i\mid \theta)\\
     &=\sum_{i=1}^N\log\frac{1}{\sqrt{2\pi}\sigma}\exp(-\frac{(x-\mu)^2}{2\sigma^2})\\
     &=\sum_{i=1}^N\left[\log\frac{1}{\sqrt{2\pi}}+\log\frac{1}{\sigma}-\frac{(x-\mu)^2}{2\sigma^2}\right]\\
 \end{aligned}
@@ -25,7 +25,7 @@ $$
 
 $$
 \begin{aligned}
-    \mu_{MLE}&=\arg\max_\mu\log P(X|\theta)\\
+    \mu_{MLE}&=\arg\max_\mu\log P(X\mid \theta)\\
     &=\arg\max_\mu\sum_{i=1}^N -\frac{(x-\mu)^2}{2\sigma^2}\\
     &=\arg\min_\mu\sum_{i=1}^N (x-\mu)^2\\
 \end{aligned}
@@ -45,7 +45,7 @@ $$
 而对于方差进行估计：
 $$
 \begin{aligned}
-    \sigma_{MLE}^2&=\arg\max_{\sigma^2}\log P(X|\theta)\\
+    \sigma_{MLE}^2&=\arg\max_{\sigma^2}\log P(X\mid \theta)\\
     &=\arg\max_{\sigma^2}\sum_{i=1}^N\left[-\log\sigma-\frac{(x-\mu)^2}{2\sigma^2}\right]\\
     &=\arg\max_{\sigma^2}\ell(\sigma^2)\\
 \end{aligned}
@@ -120,7 +120,7 @@ $$
 
 ## 3 Marginal Probability Distribution & Conditional Probability Distribution
 
-已知一个高斯分布，求其边缘概率分布和联合概率分布是一类常见的问题，例如：已知$X=\begin{pmatrix}X_a\\X_b\end{pmatrix}$，其中 $X_a\in\mathbb{R}^m$，$X_b\in\mathbb{R}^n$，且 $X\sim\mathcal{N}(\mu,\Sigma)$，其中 $\mu=\begin{pmatrix}\mu_a\\\mu_b\end{pmatrix}$，$\Sigma=\begin{pmatrix}\Sigma_{aa}&\Sigma_{ab}\\\Sigma_{ba}&\Sigma_{bb}\end{pmatrix}$，求 $P(X_a)$、$P(X_b)$、$P(X_a|X_b)$、$P(X_b|X_a)$。
+已知一个高斯分布，求其边缘概率分布和联合概率分布是一类常见的问题，例如：已知$X=\begin{pmatrix}X_a\\X_b\end{pmatrix}$，其中 $X_a\in\mathbb{R}^m$，$X_b\in\mathbb{R}^n$，且 $X\sim\mathcal{N}(\mu,\Sigma)$，其中 $\mu=\begin{pmatrix}\mu_a\\\mu_b\end{pmatrix}$，$\Sigma=\begin{pmatrix}\Sigma_{aa}&\Sigma_{ab}\\\Sigma_{ba}&\Sigma_{bb}\end{pmatrix}$，求 $P(X_a)$、$P(X_b)$、$P(X_a\mid X_b)$、$P(X_b\mid X_a)$。
 
 有如下的定理：
 $$
@@ -164,14 +164,14 @@ $\Sigma_{bb-a}$ 的定义即块 $\Sigma_aa$ 在 $\Sigma$ 中的*舒尔补*（Sch
 
 那么由于 $X_b=X_{b-a}+\Sigma_{ba}\Sigma_{aa}^{-1}X_a$，因此：
 $$
-E[X_b|X_a]=\mu_{b-a}+\Sigma_{ba}\Sigma_{aa}^{-1}X_a
+E[X_b\mid X_a]=\mu_{b-a}+\Sigma_{ba}\Sigma_{aa}^{-1}X_a
 $$
 
 $$
-\mathrm{Var}[X_b|X_a]=\mathrm{Var}[X_{b-a}]=\Sigma_{bb-a}
+\mathrm{Var}[X_b\mid X_a]=\mathrm{Var}[X_{b-a}]=\Sigma_{bb-a}
 $$
 
-因此 $X_b|X_a\sim\mathcal{N}(\mu_{b-a}+\Sigma_{ba}\Sigma_{aa}^{-1}X_a,\Sigma_{bb-a})$，同理  $X_b|X_a\sim\mathcal{N}(\mu_{a-b}+\Sigma_{ab}\Sigma_{bb}^{-1}X_b,\Sigma_{aa-b})$。
+因此 $X_b\mid X_a\sim\mathcal{N}(\mu_{b-a}+\Sigma_{ba}\Sigma_{aa}^{-1}X_a,\Sigma_{bb-a})$，同理  $X_b\mid X_a\sim\mathcal{N}(\mu_{a-b}+\Sigma_{ab}\Sigma_{bb}^{-1}X_b,\Sigma_{aa-b})$。
 
 ## 4 Joint Probability Distribution
 
@@ -181,7 +181,7 @@ P(X)=\mathcal{N}(\mu,\Lambda^{-1})
 $$
 
 $$
-P(Y|X)=\mathcal{N}(AX+b,L^{-1})
+P(Y\mid X)=\mathcal{N}(AX+b,L^{-1})
 $$
 
 其中 $\Lambda$ 表示精度矩阵，其定义为协方差矩阵的逆。如果定义 $Z=\begin{pmatrix}X\\Y\end{pmatrix}$，如何表示 $Z$ 的概率分布（即 $X$、$Y$ 的条件概率分布）？

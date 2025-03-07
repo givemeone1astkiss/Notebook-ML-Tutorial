@@ -10,19 +10,19 @@ $$
     x_1&x_2&\dotsb&x_N
 \end{pmatrix}\begin{pmatrix}
     1\\1\\\vdots\\1
-\end{pmatrix}_{N\times1}=\frac{1}{N}X^\top\mathbf{1}_{N}
+\end{pmatrix}_{N\times1}=\frac{1}{N}X^\top\boldsymbol{1}_{N}
 $$
 
 $$
 \begin{aligned}
     \Sigma&=\frac{1}{N}\sum_{i=1}^N(x_i-\bar{x})(x_i-\bar{x})^\top\\
-    &=\frac{1}{N}(X^\top-\frac{1}{N}X^\top\mathbf{1}_{N}\mathbf{1}_{N}^\top)(X^\top-\frac{1}{N}X^\top\mathbf{1}_{N}\mathbf{1}_{N}^\top)^\top\\
-    &=\frac{1}{N}X^\top(I_N-\frac{1}{N}\mathbf{1}_{N}\mathbf{1}_{N}^\top)(I_N-\frac{1}{N}\mathbf{1}_{N}\mathbf{1}_{N}^\top)^\top X\\
+    &=\frac{1}{N}(X^\top-\frac{1}{N}X^\top\boldsymbol{1}_{N}\boldsymbol{1}_{N}^\top)(X^\top-\frac{1}{N}X^\top\boldsymbol{1}_{N}\boldsymbol{1}_{N}^\top)^\top\\
+    &=\frac{1}{N}X^\top(I_N-\frac{1}{N}\boldsymbol{1}_{N}\boldsymbol{1}_{N}^\top)(I_N-\frac{1}{N}\boldsymbol{1}_{N}\boldsymbol{1}_{N}^\top)^\top X\\
     &=\frac{1}{N}X^\top HH^\top X\\
 \end{aligned}
 $$
 
-上式中 $H=(I_N-\frac{1}{N}\mathbf{1}_{N}\mathbf{1}_{N}^\top)$ 称为中心化矩阵，实际上 $H=H^\top$ 且 $HH^\top=H$，因此上式可以简化为 $\Sigma=\frac{1}{N}X^\top H X$。
+上式中 $H=(I_N-\frac{1}{N}\boldsymbol{1}_{N}\boldsymbol{1}_{N}^\top)$ 称为中心化矩阵，实际上 $H=H^\top$ 且 $HH^\top=H$，因此上式可以简化为 $\Sigma=\frac{1}{N}X^\top H X$。
 
 ## 2 PCA
 
@@ -60,8 +60,8 @@ $$
 
 $$
 \begin{aligned}
-    \mathcal{J}&=\frac{1}{N}\sum_{i=1}^N\|x_i-\hat{x}_i\|^2\\
-    &=\frac{1}{N}\sum_{i=1}^N\|\sum_{k=q+1}^p(x_i^\top u_k)u_k\|^2\\
+    \mathcal{J}&=\frac{1}{N}\sum_{i=1}^N\Vertx_i-\hat{x}_i\Vert^2\\
+    &=\frac{1}{N}\sum_{i=1}^N\Vert\sum_{k=q+1}^p(x_i^\top u_k)u_k\Vert^2\\
     &=\frac{1}{N}\sum_{i=1}^N\sum_{k=q+1}^p(x_i^\top u_k)^2\\
     &=\sum_{k=q+1}^p\frac{1}{N}\sum_{i=1}^N((x_i-\bar{x})^\top u_k)^2\\
     &=\sum_{k=q+1}^pu_k^\top\Sigma u_k~~~s.t.~u_k^\top u_k=1\\
@@ -115,7 +115,7 @@ $$
 \epsilon\in\mathcal{N}(\mathcal{O}_p,\sigma^2I)
 $$
 
-P-PCA 的推断过程需要用到 $P(z|x)$，以下是推导过程：
+P-PCA 的推断过程需要用到 $P(z\mid x)$，以下是推导过程：
 
 $$
 \mathbb{E}[x]=\mathbb{E}[Wz+\mu]+\mathbb{E}[\epsilon]=\mu
@@ -126,11 +126,11 @@ $$
 $$
 
 $$
-\mathbb{E}[x|z]=\mathbb{E}[Wz+\mu+\epsilon]=Wz+\mu
+\mathbb{E}[x\mid z]=\mathbb{E}[Wz+\mu+\epsilon]=Wz+\mu
 $$
 
 $$
-\mathrm{Var}[x|z]=\mathrm{Var}[Wx+\mu+\epsilon]=\sigma^2I
+\mathrm{Var}[x\mid z]=\mathrm{Var}[Wx+\mu+\epsilon]=\sigma^2I
 $$
 
 因此，可以写出联合概率分布：
@@ -145,18 +145,18 @@ $$
 \end{bmatrix}\right)
 $$
 
-其中 $\Delta=W$，然后从联合概率分布中推导出 $P(z|x)$：
+其中 $\Delta=W$，然后从联合概率分布中推导出 $P(z\mid x)$：
 $$
-\mathbb{E}[z|x]=\mathbb{E}[x_{z-x}]+\Sigma_{zx}\Sigma_{xx}^{-1}x=\mathcal{O}_q+\Sigma_{zx}\Sigma_{xx}^{-1}(x-\mu)=W^\top(WW^\top+\sigma I)^{-1}(x-\mu)
-$$
-
-$$
-\mathrm{Var}[z|x]=\Sigma_{zz-x}=\Sigma_{zz}-\Sigma_{zx}\Sigma_{xx}^{-1}\Sigma_{xz}=I-W^\top(WW^\top+\sigma^2I)^{-1}W
+\mathbb{E}[z\mid x]=\mathbb{E}[x_{z-x}]+\Sigma_{zx}\Sigma_{xx}^{-1}x=\mathcal{O}_q+\Sigma_{zx}\Sigma_{xx}^{-1}(x-\mu)=W^\top(WW^\top+\sigma I)^{-1}(x-\mu)
 $$
 
-因此，$z|x\sim\mathcal{N}(W^\top(WW^\top+\sigma I)^{-1}(x-\mu),I-W^\top(WW^\top+\sigma^2I)^{-1}W)$，或者进一步通过矩阵求逆引理（Woodbury恒等式）化简为：
 $$
-z|x\sim\mathcal{N}((WW^\top+\sigma I)^{-1}W^\top(x-\mu),\sigma^2(W^\top W+\sigma^2I)^{-1})
+\mathrm{Var}[z\mid x]=\Sigma_{zz-x}=\Sigma_{zz}-\Sigma_{zx}\Sigma_{xx}^{-1}\Sigma_{xz}=I-W^\top(WW^\top+\sigma^2I)^{-1}W
+$$
+
+因此，$z\mid x\sim\mathcal{N}(W^\top(WW^\top+\sigma I)^{-1}(x-\mu),I-W^\top(WW^\top+\sigma^2I)^{-1}W)$，或者进一步通过矩阵求逆引理（Woodbury恒等式）化简为：
+$$
+z\mid x\sim\mathcal{N}((WW^\top+\sigma I)^{-1}W^\top(x-\mu),\sigma^2(W^\top W+\sigma^2I)^{-1})
 $$
 
 该算法的优化过程使用 EM 算法迭代式地极大似然，当 $\sigma^2\rightarrow 0$ 时，P-PCA 退化为 PCA。

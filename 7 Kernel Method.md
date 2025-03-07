@@ -22,7 +22,7 @@ $$
 $$
 \forall \alpha=\begin{pmatrix}
     \alpha_1&\dotsb&\alpha_n
-\end{pmatrix}\not ={\mathbf{0}},\{x_1,\dotsb,x_n\}\subset\mathcal{X},\sum_{i=1}^n\sum_{j=1}^n\alpha_i\alpha_jK(x_i,x_j)\geq0
+\end{pmatrix}\not ={\boldsymbol{0}},\{x_1,\dotsb,x_n\}\subset\mathcal{X},\sum_{i=1}^n\sum_{j=1}^n\alpha_i\alpha_jK(x_i,x_j)\geq0
 $$
 
 而 **Mecer 定理**指出，对于任意一个正定的核函数 $K$，存在某个希尔伯特空间 $\mathcal{H}$ 及其对应的映射 $\phi:\mathcal{X}\rightarrow\mathcal{H}$ 使得 $\forall x,x'\in\mathcal{X}$，有：
@@ -62,7 +62,7 @@ $$
 - **高斯径向基核函数（RBF Kernel）：**
 
 $$
-K(x,x')=\exp(-\gamma\|x-x'\|_2^2),\gamma>0
+K(x,x')=\exp(-\gamma\Vertx-x'\Vert_2^2),\gamma>0
 $$
 
 - **Sigmoid 核（Sigmoid Kernel）：**
@@ -74,5 +74,5 @@ $$
 - **拉普拉斯核（Laplacian Kernel）：**
 
 $$
-K(x,x')=\exp(-\gamma\|x-x'\|_1),\gamma>0
+K(x,x')=\exp(-\gamma\Vertx-x'\Vert_1),\gamma>0
 $$

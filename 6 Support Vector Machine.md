@@ -77,7 +77,7 @@ KKT 条件可以分为以下几个部分：
 - **平稳条件（Stationarity）：** 拉格朗日该函数的梯度为零
 
 $$
-\frac{\partial \mathcal{L}(x,\lambda^*,\eta^*)}{\partial x}\Big|_{x=x^*}= 0
+\frac{\partial \mathcal{L}(x,\lambda^*,\eta^*)}{\partial x}\Big\mid _{x=x^*}= 0
 $$
 
 - **原始可行性条件（Primal Feasibility）：** 满足不等式和等式约束
@@ -113,13 +113,13 @@ $$
 
 SVM 定义“间隔”为与超平面距离最近的点到超平面的距离，对于一个给定的超平面，间隔可以表示为：
 $$
-\mathrm{margin}(w,b)=\min_{x_i,\forall i\in \{1,\dotsb,N\}}\frac{1}{\|w\|}|w^\top x_i+b|
+\mathrm{margin}(w,b)=\min_{x_i,\forall i\in \{1,\dotsb,N\}}\frac{1}{\Vertw\Vert}\mid w^\top x_i+b\mid
 $$
 
 那么 SVM 的优化问题可以被表示为：
 $$
 \begin{cases}
-    \max_{w,b}\min_{x_i,\forall i\in \{1,\dotsb,N\}}\frac{1}{\|w\|}|w^\top x_i+b|\\
+    \max_{w,b}\min_{x_i,\forall i\in \{1,\dotsb,N\}}\frac{1}{\Vertw\Vert}\mid w^\top x_i+b\mid \\
     \mathrm{s.t.}~y_i(w^\top x_i+b)>0,\forall i\in \{1,\dotsb,N\}
 \end{cases}
 $$
@@ -127,7 +127,7 @@ $$
 或者将优化目标改写为：
 $$
 \begin{cases}
-    \max_{w,b}\frac{1}{\|w\|}\min_{x_i,\forall i\in \{1,\dotsb,N\}}|w^\top x_i+b|\\
+    \max_{w,b}\frac{1}{\Vertw\Vert}\min_{x_i,\forall i\in \{1,\dotsb,N\}}\mid w^\top x_i+b\mid \\
     \mathrm{s.t.}~\exist r>0,\min y_i(w^\top x_i+b)=r,\forall i\in \{1,\dotsb,N\}
 \end{cases}
 $$
@@ -135,7 +135,7 @@ $$
 由于 $r$ 的值本身并不影响优化结果，我们直接规定 $r=1$：
 $$
 \begin{cases}
-    \min_{w}\|w\|\\
+    \min_{w}\Vertw\Vert\\
     \mathrm{s.t.}~y_i(w^\top x_i+b)\geq1,\forall i\in \{1,\dotsb,N\}
 \end{cases}
 $$

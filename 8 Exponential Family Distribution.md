@@ -4,7 +4,7 @@
 
 指数族分布是一类重要的概率分布，包括高斯分布、泊松分布、狄利克雷分布、Beta 分布等，一个指数族分布应该满足以下的形式：
 $$
-p(x|\eta) = h(x)\exp\left(\eta^T T(x) - A(\eta)\right)
+p(x\mid \eta) = h(x)\exp\left(\eta^T T(x) - A(\eta)\right)
 $$
 其中：
 
@@ -23,7 +23,7 @@ $$
 标准形式下的单变量高斯分布的概率密度函数（PDF）可以表示为：
 
 $$
-p(x|\mu, \sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)
+p(x\mid \mu, \sigma^2) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)
 $$
 
 其中，$x$ 是随机变量，$\mu$ 是均值，$\sigma^2$ 是方差。
@@ -32,7 +32,7 @@ $$
 
 $$
 \begin{aligned}
-    p(x|\mu, \sigma^2) &= \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{x^2 - 2x\mu + \mu^2}{2\sigma^2}\right)\\
+    p(x\mid \mu, \sigma^2) &= \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{x^2 - 2x\mu + \mu^2}{2\sigma^2}\right)\\
     &= \exp(-\frac{1}{2}\log 2\pi\sigma^2) \exp\left(-\frac{x^2}{2\sigma^2} + \frac{x\mu}{\sigma^2} - \frac{\mu^2}{2\sigma^2}\right)\\
     &=\exp\left(\begin{pmatrix}
         \frac{\mu}{\sigma^2}&-\frac{1}{2\sigma^2}
@@ -55,7 +55,7 @@ $$
 现在，我们把所有这些代入到指数族的标准形式中：
 
 $$
-p(x|\eta) = \underbrace{1}_{h(x)} \cdot \exp\left(\underbrace{\begin{pmatrix}
+p(x\mid \eta) = \underbrace{1}_{h(x)} \cdot \exp\left(\underbrace{\begin{pmatrix}
         \frac{\mu}{\sigma^2}&-\frac{1}{2\sigma^2}
     \end{pmatrix}}_{\eta}\underbrace{\begin{pmatrix}
         x\\x^2
@@ -74,19 +74,19 @@ $$
 \int h(x) \exp\left(\eta^T T(x) - A(\eta)\right) (T(x) - \nabla_{\eta} A(\eta)) \,\mathrm{d}x = 0
 $$
 
-由于 $p(x|\eta) = h(x)\exp\left(\eta^T T(x) - A(\eta)\right)$，可以将上式改写为：
+由于 $p(x\mid \eta) = h(x)\exp\left(\eta^T T(x) - A(\eta)\right)$，可以将上式改写为：
 $$
-\int p(x|\eta) (T(x) - \nabla_{\eta} A(\eta)) \,\mathrm{d}x = 0
+\int p(x\mid \eta) (T(x) - \nabla_{\eta} A(\eta)) \,\mathrm{d}x = 0
 $$
 
 这意味着：
 $$
-\int p(x|\eta) T(x) \,\mathrm{d}x - \nabla_{\eta} A(\eta) \int p(x|\eta) \,\mathrm{d}x = 0
+\int p(x\mid \eta) T(x) \,\mathrm{d}x - \nabla_{\eta} A(\eta) \int p(x\mid \eta) \,\mathrm{d}x = 0
 $$
 
-因为 $\int p(x|\eta) \,\mathrm{d}x = 1$，我们有：
+因为 $\int p(x\mid \eta) \,\mathrm{d}x = 1$，我们有：
 $$
-E_{p(x|\eta)}[T(x)] = \nabla_{\eta} A(\eta)
+E_{p(x\mid \eta)}[T(x)] = \nabla_{\eta} A(\eta)
 $$
 
 我们知道 $E[T(x)] = \nabla_{\eta} A(\eta)$，接下来求其方差。方差的定义是：
@@ -96,7 +96,7 @@ $$
 
 首先计算 $E[T(x)^2]$：
 $$
-E[T(x)^2] = \int p(x|\eta) T(x)^2 \,\mathrm{d}x
+E[T(x)^2] = \int p(x\mid \eta) T(x)^2 \,\mathrm{d}x
 $$
 
 根据之前的结果，我们知道：
@@ -106,25 +106,25 @@ $$
 
 对方程两边再次关于 $\eta$ 求导，得到：
 $$
-\nabla_{\eta} E[T(x)] = \nabla_{\eta} \left( \int p(x|\eta) T(x) \,\mathrm{d}x \right)
+\nabla_{\eta} E[T(x)] = \nabla_{\eta} \left( \int p(x\mid \eta) T(x) \,\mathrm{d}x \right)
 $$
 
 由于积分和微分可以交换顺序（在一定条件下），我们得到：
 $$
-\nabla_{\eta} E[T(x)] = \int \left( \nabla_{\eta} p(x|\eta) \cdot T(x) + p(x|\eta) \cdot \nabla_{\eta} T(x) \right) \,\mathrm{d}x
+\nabla_{\eta} E[T(x)] = \int \left( \nabla_{\eta} p(x\mid \eta) \cdot T(x) + p(x\mid \eta) \cdot \nabla_{\eta} T(x) \right) \,\mathrm{d}x
 $$
 
-注意到 $\nabla_{\eta} p(x|\eta) = p(x|\eta) (T(x) - \nabla_{\eta} A(\eta))$（由归一化条件得出），因此：
+注意到 $\nabla_{\eta} p(x\mid \eta) = p(x\mid \eta) (T(x) - \nabla_{\eta} A(\eta))$（由归一化条件得出），因此：
 $$
-\nabla_{\eta} E[T(x)] = \int \left( p(x|\eta) (T(x) - \nabla_{\eta} A(\eta)) T(x) + p(x|\eta) \nabla_{\eta} T(x) \right) \,\mathrm{d}x
+\nabla_{\eta} E[T(x)] = \int \left( p(x\mid \eta) (T(x) - \nabla_{\eta} A(\eta)) T(x) + p(x\mid \eta) \nabla_{\eta} T(x) \right) \,\mathrm{d}x
 $$
 
 简化上式：
 $$
-\nabla_{\eta} E[T(x)] = \int p(x|\eta) T(x)^2 \,\mathrm{d}x - \nabla_{\eta} A(\eta) \int p(x|\eta) T(x) \,\mathrm{d}x + \int p(x|\eta) \nabla_{\eta} T(x) \,\mathrm{d}x
+\nabla_{\eta} E[T(x)] = \int p(x\mid \eta) T(x)^2 \,\mathrm{d}x - \nabla_{\eta} A(\eta) \int p(x\mid \eta) T(x) \,\mathrm{d}x + \int p(x\mid \eta) \nabla_{\eta} T(x) \,\mathrm{d}x
 $$
 
-由于 $\int p(x|\eta) T(x) \,\mathrm{d}x = E[T(x)] = \nabla_{\eta} A(\eta)$，并且 $\int p(x|\eta) \nabla_{\eta} T(x) \,\mathrm{d}x = E[\nabla_{\eta} T(x)]$，所以：
+由于 $\int p(x\mid \eta) T(x) \,\mathrm{d}x = E[T(x)] = \nabla_{\eta} A(\eta)$，并且 $\int p(x\mid \eta) \nabla_{\eta} T(x) \,\mathrm{d}x = E[\nabla_{\eta} T(x)]$，所以：
 $$
 \nabla_{\eta} E[T(x)] = E[T(x)^2] - (\nabla_{\eta} A(\eta))^2 + E[\nabla_{\eta} T(x)]
 $$
@@ -141,7 +141,7 @@ $$
 
 最终，我们得到了方差的表达式：
 $$
-\text{Var}_{p(x|\eta)}[T(x)] = E[T(x)^2] - (E[T(x)])^2 = \nabla_{\eta}^2 A(\eta)
+\text{Var}_{p(x\mid \eta)}[T(x)] = E[T(x)^2] - (E[T(x)])^2 = \nabla_{\eta}^2 A(\eta)
 $$
 
 ## 4 Maximum Likelyhood Estimate
@@ -149,7 +149,7 @@ $$
 给定一组独立同分布（i.i.d.）的数据样本 $\{x_1, x_2, ..., x_n\}$，进行极大似然估计：
 
 $$
-\mathcal{J}(\eta) = \sum_{i=1}^{n} \log p(x_i|\eta)
+\mathcal{J}(\eta) = \sum_{i=1}^{n} \log p(x_i\mid \eta)
 $$
 
 我们的目标是找到使得对数似然函数最大的参数 $\eta$：
