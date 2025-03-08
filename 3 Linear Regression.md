@@ -237,6 +237,13 @@ $$
 $$
 可见噪声精度的估计由估计残差的平均平方和的倒数给出。
 
+这种方式的局限在于我们假设基函数在观测到任何数据之前就固定了，结果导致基函数的数量随着输入空间的维度而以指数方式增长。
+
+真实数据的两个性质有助于缓解这个问题：
+
+- 数据向量通常位于一个非线性流形内部，流形本身的维度小于输入空间的维度，如果我们使用局部基函数，那么我们可以让基函数只分布在输入空间中包含数据的区域
+- 目标变量可能只依赖于数据流形中的少量可能的方向
+
 ## 5 Sequential Learning
 
 直接计算解析解的方式涉及一次性处理整个数据集，这种求解方式对于大规模数据是困难的。在数据集足够大的情况下使用顺序算法或许更有意义。在顺序算法中，每次只考虑一个数据点，模型的参数在每观测到一个数据点之后进行更新。
@@ -333,3 +340,56 @@ $$
 k(x,z)=\psi(x)^\top\psi(z)\\
 \psi(x)=\Lambda^{1/2}\boldsymbol S_N^{1/2}\phi(x)
 $$
+
+## 8 Bayesian Model Comparison
+
+相较于频率派偏差-方差分解的角度，贝叶斯派使用概率建模模型选择的不确定性。假设我们要比较 $L$ 个模型 $\{\mathcal{M}_i\}$，其中 $i=1,\dotsb,L$，我们将模型解释为观测数据 $D$ 上的概率分布，我们假定数据是由这些模型之一生成的，但是不确定是哪一个，不确定性通过先验概率分布 $p(\mathcal{M_i})$ 表示，给定一个训练数据集 $D$，我们想对后验概率进行估计：
+$$
+p(\mathcal{M}_i\mid D)\propto p(\mathcal{M}_i)p(D\mid \mathcal{M}_i)
+$$
+先验分布是对模型优先级的一种启发式建模，我们先简单地认为所有模型都有相同的先验概率。$p(D|\mathcal{M}_i)$ 被称为模型证据或边缘似然（marginal likelyhood），它表达了数据展现出的不同模型的优先级。两个模型证据的比值 $\frac{p(D\mid \mathcal{M}_i)}{p(D\mid \mathcal{M}_j)}$ 被称为贝叶斯因子。
+
+在获得模型的后验分布之后，我们可以建模预测分布：
+$$
+p(y\mid\boldsymbol{x},D)=\sum_{i=1}^Lp(y\mid\boldsymbol{x},\mathcal{M}_i,D)p(\mathcal{M}_i\mid D)
+$$
+这是混合分布的一个例子，在公式中，整体的预测分布由对各模型的预测分布 $p(y\mid\boldsymbol{x},\mathcal{M}_i,D)$ 加权平均得到，权值为这些模型的后验概率 $p(\mathcal{M}_i\mid D)$。对模型求平均的一个近似方法是使用一个最可能的模型自己做预测，这被称为模型选择（model selection）。
+
+对于一个由参数 $\boldsymbol w$ 控制的模型，模型证据为：
+$$
+p(D\mid\mathcal{M}_i)=\int p(D\mid \boldsymbol{w}, \mathcal{M}_i)p(\boldsymbol w\mid \mathcal{M}_i)\mathrm d\boldsymbol w
+$$
+从采样的角度来看，边缘似然可以看作从一个模型中生成数据集 $D$ 的概率，模型的参数是从先验分布中随机采样得到的。同时有趣的是，模型证据恰好是估计参数后验分布时出现在贝叶斯定理的分母归一化项：
+$$
+p(\boldsymbol w \mid D,\mathcal{M}_i)=\frac{p(D\mid\boldsymbol w,\mathcal{M}_i)p(\boldsymbol w\mid \mathcal{M}_i)}{p(D|\mathcal{M}_i)}
+$$
+我们对在参数上的积分进行近似。首先假设模型只有一个参数，这个参数的后验概率正比于 $p(D\mid \boldsymbol{w}, \mathcal{M}_i)p(\boldsymbol w\mid \mathcal{M}_i)$，假设后验分布在最大似然值附近是一个尖峰，宽度为 $\Delta\boldsymbol w_{posterior}$，然后我们用被积函数的值乘以尖峰的宽度来近似积分。如果我们假设先验分布是平坦的均匀分布，宽度为 $\Delta \boldsymbol w_{prior}$，函数值为 $p(\boldsymbol w)=\frac{1}{\Delta \boldsymbol w_{prior}}$，那么我么们有：
+$$
+p(D\mid\mathcal{M}_i)\simeq p(D|\boldsymbol w_{MAP})\frac{\Delta\boldsymbol w_{posterior}}{\Delta \boldsymbol w_{prior}}
+$$
+或者取对数：
+$$
+\ln p(D\mid\mathcal{M}_i)\simeq \ln p(D|\boldsymbol w_{MAP})+\ln\frac{\Delta\boldsymbol w_{posterior}}{\Delta \boldsymbol w_{prior}}
+$$
+第一项拟合由最可能参数给出的数据，在平坦先验的情况下等价于对数似然。第二项用于对模型的复杂度惩罚模型，其值为负数。
+
+对于有 $M$ 个参数的模型，我们可以对每个参数进行类似的估计，假设所有参数的 $\frac{\Delta\boldsymbol w_{posterior}}{\Delta \boldsymbol w_{prior}}$ 都相等，则有：
+$$
+\ln p(D\mid\mathcal{M}_i)\simeq \ln p(D|\boldsymbol w_{MAP})+M\ln\frac{\Delta\boldsymbol w_{posterior}}{\Delta \boldsymbol w_{prior}}
+$$
+通常增加模型的复杂度，第一项会增大，而第二项会减小，反之类似，因此最优的模型复杂度需要在这两个竞争的分量中进行折中。
+
+考虑三个模型 $\{\mathcal{M}_i\},i=1,2,3$，它们的复杂度依次增加，假设我们首先从先验分布 $p(\boldsymbol w)$ 中采样参数，然后使用具体的参数从 $p(D\mid \boldsymbol w)$ 生成数据。简单的模型基本没有变化性，因此生成的数据集彼此相似，于是其分布 $p(D\mid \mathcal{M}_1)$ 被限制在一个很小的区域内。复杂的模型可生成变化相当大的数据集，因此其分布 $p(D)$ 遍布了数据集空间中相当大的区域。由于概率归一化的性质，因此特定的数据集 $D_0$ 对中等复杂度的模型有最高的模型证据。
+
+![Bayesian Model Comparison](./images/3-1.png)
+
+贝叶斯模型的一个隐含的假设是，生成数据的概率分布包含在考虑的模型集合中，当这个假设成立时，可以证明，贝叶斯模型倾向于选择正确的模型。假设我们要对两个模型 $\mathcal{M}_1$、$\mathcal{M}_2$ 进行比较，其中真实的数据来自于 $\mathcal{M}_1$，那么贝叶斯因子可以表示为 $\frac{p(D\mid\mathcal{M}_1)}{p(D\mid\mathcal{M}_2)}$，对于有限的数据集，可能由于噪声原因导致贝叶斯隐私的值异常，以至于错误选择，但是如果我们考虑在整个数据集上的平均：
+$$
+\int p(D\mid\mathcal{M}_1)\ln \frac{p(D\mid\mathcal{M}_1)}{p(D\mid\mathcal{M}_2)}\mathrm d D=D_{KL}(p(D\mid\mathcal{M}_1)\Vert p(D\mid\mathcal{M}_2))
+$$
+由于 KL 散度总是不小于零的，因此贝叶斯模型总是倾向于选择正确的模型。
+
+贝叶斯方法的局限在于需要对模型的形式做出假设，并且当假设不合理时，结果就无意义。例如，模型对先验分布的很多方面都很敏感，对于反常的先验分布，模型证据是无法定义的。实际应用中，一个明智的做法是保留一个独立的数据集用于评估系统的整体表现。
+
+## 9 The Evidence Approximation
+
