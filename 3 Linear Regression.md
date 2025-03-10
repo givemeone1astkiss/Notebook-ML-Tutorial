@@ -393,3 +393,103 @@ $$
 
 ## 9 The Evidence Approximation
 
+在之前的贝叶斯框架中，我们能够通过引入超参数 $\alpha$、$\beta$ 的先验分布，然后通过对超参数及参数 $w$ 做积分的方式做出预测：
+$$
+p(y\mid Y)=\iiint p(y\mid \boldsymbol w,\Lambda)p(\boldsymbol w\mid Y,\alpha,\Lambda)p(\alpha,\Lambda\mid Y)~\mathrm d\boldsymbol w~\mathrm d\alpha\mathrm~d\beta
+$$
+如果后验分布 $p(\alpha,\Lambda\mid Y)$ 在 $\hat{\alpha}$ 和 $\hat{\Lambda}$ 附近有尖峰，那么预测分布可以通过将 $\alpha$、$\Lambda$ 固定为 $\hat{\alpha}$、$\hat{\Lambda}$ 并对 $\boldsymbol w$ 积分的方式近似：
+$$
+p(y\mid Y)\simeq p(y\mid Y,\hat\alpha,\hat\Lambda)=\int p(y\mid \boldsymbol w,\hat \Lambda)p(\boldsymbol w\mid Y,\hat\alpha,\hat\Lambda)~\mathrm d\boldsymbol w
+$$
+根据贝叶斯定理，$\alpha$、$\Lambda$ 的后验分布为：
+$$
+p(\alpha,\Lambda\mid Y)\propto p(Y\mid \alpha,\Lambda)p(\alpha,\Lambda)
+$$
+对于平坦的先验，$\hat{\alpha}$ 和 $\hat{\Lambda}$ 可以通过最大化边缘似然函数 $p(Y\mid \alpha,\Lambda)$ 的方式得到，因此我们能从训练数据本身确定这些超参数的值。
+
+如果我们使用 $\hat{\alpha}$ 和 $\hat{\Lambda}$ 上的共轭先验，那么 $p(y\mid Y)$ 中关于这些超参数的积分可以显式地计算出来，并得到 $\boldsymbol w$ 上的学生 t 分布，但是得到的 $\boldsymbol w$ 上的积分不再有解析解，但是我们采用一些手段对这个积分求近似，例如使用拉普拉斯近似的方法，但是由于这种近似的基础是以后验概率分布的众数为中心的局部高斯近似，而作为 $\boldsymbol w$ 的函数 的被积函数的众数通常很不准确，因此拉普拉斯近似方法不能描述概率质量中的大多数信息，从而导致较差的结果。
+
+证据框架中，有两种方式可以用来最大化对数证据：
+
+- 解析地计算证据函数，然后令其导数为零，得到超参数的重估计方程
+- 使用 EM 算法，通过迭代的方式最大化证据
+
+边缘似然函数 $p(Y\mid \alpha, \Lambda)$ 是通过对权值参数 $\boldsymbol w$ 进行积分得到的：
+$$
+p(Y\mid \alpha,\Lambda)=\int p(Y\mid \boldsymbol w,\Lambda)p(\boldsymbol w\mid \alpha)\mathrm d \boldsymbol w
+$$
+通过配方法可以将其写成这种形式：
+$$
+p(Y\mid\alpha,\Lambda)=\left(\frac{\Lambda}{2\pi}\right)^{\frac{N}{2}}\left(\frac{\alpha}{2\pi}\right)^{\frac{M}{2}}\int\exp\{-E(\boldsymbol w)\}\mathrm d\boldsymbol w
+$$
+其中 $M$ 是 $\boldsymbol w$ 的维度，并且我们定义了：
+$$
+E(\boldsymbol w)=\Lambda E_D(\boldsymbol w)+\alpha E_W(\boldsymbol w)=\frac{\Lambda}{2}\Vert Y-\boldsymbol \Phi\boldsymbol w\Vert^2+\frac{\alpha}{2}\boldsymbol w^\top \boldsymbol w
+$$
+对 $\boldsymbol w$ 配平方，可得：
+$$
+E(\boldsymbol w)=E(\boldsymbol m_N)+\frac{1}{2}(\boldsymbol w-\boldsymbol m_N)^\top\boldsymbol A(\boldsymbol w-\boldsymbol m_N)\\
+\boldsymbol A=\alpha I+\Lambda\boldsymbol \Phi^\top\boldsymbol \Phi=\nabla\nabla E(\boldsymbol w)=\boldsymbol S_0^{-1}\\
+E(\boldsymbol m_N)=\frac{\Lambda}{2}\Vert Y-\Phi\boldsymbol m_N\Vert^2+\frac{\Lambda}{2}\boldsymbol m_N^\top\boldsymbol m_N\\
+\boldsymbol m_N=\Lambda\boldsymbol A^{-1}\boldsymbol \Phi^\top Y
+$$
+通过比较高斯分布的归一化系数，关于 $\boldsymbol w$ 的积分现在可以计算： 
+$$
+\begin{aligned}
+&\int\exp\{-E(\boldsymbol w)\}\mathrm d \boldsymbol w\\
+=&\exp\{-E(\boldsymbol m_N)\}\int\exp\left\{-\frac{1}{2}(\boldsymbol w-\boldsymbol m_N)^\top\boldsymbol A(\boldsymbol w-\boldsymbol m_N)\right\}\\
+=&\exp\{-E(\boldsymbol m_N)\}(2\pi)^{\frac{M}{2}}|\boldsymbol A|
+\end{aligned}
+$$
+边缘似然函数的对数可以写作下面这种形式：
+$$
+\ln p(Y\mid \alpha,\Lambda)=\frac{M}{2}\ln\alpha+\frac{N}{2}\ln \Lambda-E(\boldsymbol m_N)-\frac{1}{2}\ln |\boldsymbol A|-\frac{N}{2}\ln (2\pi)
+$$
+首先考虑对数似然关于 $\alpha$ 的最大化，定义特征向量方程：
+$$
+(\beta\boldsymbol \Phi^\top\boldsymbol \Phi)\boldsymbol u_i=\lambda_i\boldsymbol u_i
+$$
+又 $\boldsymbol A$ 的定义可知其特征值为 $\alpha+\lambda_i$。那么对数似然关于 $\alpha$ 的导数中有：
+$$
+\frac{\mathrm d}{\mathrm d\alpha}\ln|\boldsymbol A|=\frac{\mathrm d}{\mathrm d\alpha}\ln \prod_i(\lambda_i+\alpha)=\frac{\mathrm d}{\mathrm d\alpha}\sum_i\ln(\lambda_i+\alpha)=\sum_i\frac{1}{\lambda_i+\alpha}
+$$
+因此令对数似然对 $\alpha$ 的偏导等于零，即有：
+$$
+\frac{M}{2\alpha}-\frac{1}{2}\boldsymbol m_N^\top\boldsymbol m_N-\frac{1}{2}\sum_i\frac{1}{\lambda_i+\alpha}
+$$
+整理可得：
+$$
+\alpha^*=\frac{\sum_i\frac{\lambda_i}{\lambda_i+\alpha}}{m_N^\top\boldsymbol m_N}=\frac{\gamma}{m_N^\top\boldsymbol m_N}
+$$
+
+
+但是这并不是一个解析解，因为 $\boldsymbol m_N$ 本身也与 $\alpha$ 的值有关，我们可以使用迭代的方式进行优化，轮流更新 $\alpha$ 和 $\boldsymbol m_N$ 。
+
+这个结果有相当优雅的意义，如果我们对参数空间的坐标轴进行旋转变换，使之与特征向量 $\boldsymbol u_i$ 对齐，似然函数的轮廓就是轴对齐的椭圆，特征值 $\lambda_i$ 度量了似然函数的曲率。由于
+
+![The Evidence Approximation](./images/3-2.png)
+
+由于 $\Lambda\boldsymbol \Phi^\top\boldsymbol \Phi$ 是一个正定矩阵，因此其特征值为正数，$\frac{\lambda_i}{\lambda_i+\alpha}\in(0,1)$，因此 $\lambda\in(0,M)$ 。对于 $\lambda \gg \alpha$ 的方向，对应的参数会与极大似然值接近，且 $\frac{\lambda_i}{\lambda_i+\alpha}$ 接近 1，这样的参数被称为良好确定的。相反，对于 $\lambda_i\ll \alpha$ 的方向，对应参数的值将会接近 1，因此参数被先验概率设置为较小的值。从而 $\lambda$ 定义了良好估计的参数的总数。
+
+可以对 $\Lambda$ 进行类似的处理：
+$$
+\frac{\mathrm d}{\mathrm d\Lambda}\ln |\boldsymbol A|=\frac{\mathrm d}{\mathrm d\Lambda}\sum_i\ln(\lambda_i+\alpha)=\frac{1}{\Lambda}\sum_i\frac{\lambda_i}{\lambda_i+\alpha}
+$$
+类似地，可以得到：
+$$
+\frac{1}{\Lambda}=\frac{1}{N-\gamma}\sum_{n=1}^N\{y_n-\boldsymbol m_N^\top\phi(x_n)\}^2
+$$
+同样需要进行迭代优化。
+
+这个估计结果与单一变量的高斯分布的方差的无偏估计的结果相近：
+$$
+\sigma^2=\frac{1}{N-1}\sum_{n=1}^N(x_n-\mu)^2
+$$
+分子中的 $N-1$ 反映了模型的一个自由度被用于拟合均值。而目标函数的均值现在由 $\boldsymbol w^\top\phi(x)$ 给出，其包含了 $M$ 个参数，但是其中只有 $\gamma$ 个有效参数是按照数据进行调解的。
+
+对于 $N\gg M$ 的极限情况，所有参数都可以根据数据良好确定，因为在上面定义的特征方程中 $\boldsymbol \Phi^\top\boldsymbol \Phi$ 涉及到数据点的隐式求和，因此特征值通常随着数据集规模的增大而增大。在这种情况下 $\gamma=M$，并且 $\alpha$ 和 $\Lambda$ 的重估计方程可以写为：
+$$
+\alpha=\frac{M}{2E_W(\boldsymbol m_N)}\\
+\Lambda=\frac{M}{2E_D(\boldsymbol m_N)}\\
+$$
+这可以看作重估计公式的简化近似。
