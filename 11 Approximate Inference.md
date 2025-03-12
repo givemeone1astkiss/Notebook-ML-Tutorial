@@ -372,3 +372,282 @@ $$
 现在考虑这个解能否在 $A$、$B$ 之间进行分解，即是否有 $q^*(A,B)=q^*(A)q^*(B)$，当且仅当 $\ln p(A,B\mid X,C)=\ln p(A\mid X,C)+\ln p(B\mid X,C)$ 时，这种情况成立，也就是说在给定 $X$、$C$ 时，$A$ 与 $B$ 条件独立，而这可以使用 d-划分进行检测。
 
 ## 4 Variational Linear Regression
+
+此前我们讨论过贝叶斯线性回归，如果我们对所有的超参数和参数进行积分，那么精确的积分往往是无法计算的，但是变分方法可以获取一个可处理的近似。如果我们假定噪声精度 $\Lambda$ 已知并固定于真实值，而 $\boldsymbol w$ 的似然函数及先验可以写作：
+$$
+p(Y\mid\boldsymbol w)=\prod_{n=1}^N\mathcal{N}(t_n\mid\boldsymbol w^\top\phi_n,\Lambda^{-1})\\
+p(\boldsymbol w\mid \alpha)=\mathcal{N}(0,\alpha^{-1}I)\\
+\phi_n=\phi(x_n)
+$$
+现在引入参数 $\alpha$ 上的共轭 Gamma 先验分布：
+$$
+p(\alpha)=\mathrm{Gam}(\alpha\mid a_0,b_0)
+$$
+因此所有变量上的联合概率分布可以表示为：
+$$
+p(Y,\boldsymbol w,\alpha)=p(Y\mid\boldsymbol w)p(\boldsymbol w\mid \alpha)p(\alpha)
+$$
+这可以表示为有向图模型：
+
+![Variational Linear Regression](./images/11.3.png)
+
+然后，我们使用概率分解：
+$$
+q(\boldsymbol w,\alpha)=q(\boldsymbol w)q(\alpha)
+$$
+然后，我们可以写出重估计方差：
+$$
+\begin{aligned}
+\ln q^*(\alpha)&=\ln p(\alpha)+\mathbb{E}_w[\ln p(\boldsymbol w\mid \alpha)]+\mathrm{const}\\
+&= (\alpha_0-1)\ln \alpha_0-b_0\alpha+\frac{M}{2}\ln \alpha-\frac{\alpha}{2}\mathbb{E}[\boldsymbol w^\top\boldsymbol w]+\mathrm{const}
+\end{aligned}
+$$
+这表明：
+$$
+q^*(\alpha)=\mathrm{Gam}(\alpha\mid a_N,b_N)\\
+a_N=a_0+\frac{M}{2}\\
+b_N=b_0+\frac 1 2\mathbb{E}[\boldsymbol w^\top\boldsymbol w]
+$$
+类似地，我们可以得到 $\boldsymbol w$ 上的变分重估计方程：
+$$
+\begin{aligned}
+\ln q^*(\boldsymbol w)&=\ln p(Y\mid \boldsymbol w)+\mathbb{E}_\alpha[\ln p(\boldsymbol w\mid\alpha)]+\mathrm{const}\\
+&=-\frac \Lambda 2\sum_{n=1}^N\{\boldsymbol w^\top\phi_n-t_n\}^2-\frac 12\mathbb{E}[\alpha]\boldsymbol w\top\boldsymbol w+\mathrm{const}\\
+&=-\frac12\boldsymbol w^\top(\mathbb{E}[\alpha]I+\Lambda\boldsymbol\Phi^\top\boldsymbol\Phi)\boldsymbol w+\Lambda\boldsymbol w^\top\boldsymbol \Phi^\top Y+\mathrm{const}
+\end{aligned}
+$$
+由于这是一个二次型，因此分布 $q^*(\boldsymbol w)$ 是一个高斯分布，因此我们可以使用配方法得到均值和协方差：
+$$
+q^*(\boldsymbol w)=\mathcal{N}(\boldsymbol w\mid\boldsymbol m_N,\boldsymbol S_N)\\
+\boldsymbol m_N=\Lambda\boldsymbol S_N\boldsymbol \Phi^\top Y\\
+\boldsymbol S_N^{-1}=\mathbb{E}[\alpha]I+\Lambda\boldsymbol \Phi^\top\boldsymbol \Phi
+$$
+我们将这一结果与在证据框架中讨论的固定超参数后得到的 $\boldsymbol w$ 的后验比较：
+$$
+\boldsymbol m_N=\Lambda S_N\boldsymbol \Phi^\top Y\\
+\boldsymbol S_N^{-1}=\alpha I+\Lambda \Phi^\top\Phi
+$$
+可见区别在于 $\alpha$ 被替换为了它在变分分布下的期望 $\mathbb{E}(\alpha)$。
+
+据此我们可以写出计算 $q^*(\alpha)$ 和 $q^*(\boldsymbol w)$ 所需的矩：
+$$
+\mathbb{E}[\alpha]=\frac{a_n}{b_n}\\
+\mathbb{E}[\boldsymbol w^\top\boldsymbol w]=\boldsymbol m_N^\top\boldsymbol m_N+\boldsymbol S_N
+$$
+对于 $a_0=b_0=0$ 即先验无限宽的情况，变分后验 $q(\alpha)$ 的均值可以写作：
+$$
+\mathbb E[\alpha]=\frac{a_N}{b_N}=\frac{\frac{M}{2}}{\frac{\mathbb E[\boldsymbol w^\top\boldsymbol w]}{2}}=\frac{M}{\boldsymbol m_N^\top\boldsymbol m_N+\mathrm{Tr(\boldsymbol S_N)}}
+$$
+这与使用 EM 算法得到的解一致，这是由于 $q(\boldsymbol w)$ 只通过期望 $\mathrm E[\alpha]$ 对 $q(\alpha)$ 产生依赖，因此对于无限宽的先验会给出相同的结果。
+
+使用参数的高斯变分后验可以很容易地计算出预测分布：
+$$
+\begin{aligned}
+p(y\mid x,Y)&=\int p(y\mid x,\boldsymbol w)p(\boldsymbol w\mid x)\mathrm d \boldsymbol w\\
+&\simeq \int p(y\mid x,\boldsymbol w)q(\boldsymbol w)\mathrm d \boldsymbol w\\
+&=\int \mathcal{N}(y\mid \boldsymbol w^\top\phi(x),\Lambda^{-1})\mathcal{N}(\boldsymbol w\mid \boldsymbol m_N,\boldsymbol S_N)\mathrm d\boldsymbol w\\
+&=\mathcal{N}(y\mid\boldsymbol m_N^\top\phi(x),\sigma^2(x))
+\end{aligned}
+$$
+其中 $\sigma^2(x)=\frac{1}{\Lambda}+\phi(x)^\top\boldsymbol S_N\phi(x)$。
+
+此外，我们还可以从分布中导出下界 $\mathcal{L}$，定义为：
+$$
+\mathbb{E}[\ln p(Y\mid \boldsymbol w)]_{\boldsymbol w}=\frac{N}{2}\ln\left(\frac{\Lambda}{2\pi}\right)-\frac{\Lambda}{2}Y^\top Y+\Lambda\boldsymbol m_N^\top\boldsymbol \Phi^\top Y-\frac{\Lambda}{2}\mathrm{Tr}[\boldsymbol \Phi^\top\boldsymbol \Phi(\boldsymbol m_N\boldsymbol m_N^\top+\boldsymbol S_N)\\
+\mathbb E[\ln p(\boldsymbol w\mid \alpha)]_{\boldsymbol w,\alpha}=-\frac{M}{2}\ln(2\pi)+\frac{M}{2}(\psi(a_N)-\ln b_N)-\frac{a_N}{2b_N}[\boldsymbol m_N^\top \boldsymbol m_N+\mathrm{Tr}(\boldsymbol S_N)]\\
+\mathbb E[\ln p(\alpha)]_\alpha=a_0\ln b_0+(a_0-1)[\psi(a_N)-\ln b_N]-b_0\frac{a_N}{b_N}-\ln \Gamma(a+0)\\
+-\mathbb E[\ln q(\boldsymbol w)]_{\boldsymbol w}=\frac12\ln|\boldsymbol S_N|+\frac{M}{2}|1+\ln(2\pi)|\\
+-\mathbb E[\ln q(\alpha)]_\alpha=\ln\Gamma(a_N)-(a_N-1)\psi(a_N)-\ln b_N+a_N
+$$
+
+## 5 Local Variational Methods
+
+### 5.1 Convex Duality
+
+凸函数的性质对局部变分的框架起重要的作用，我们使用凸对偶的框架形式化地描述寻找凸函数下界的方法。
+
+对于一个一般的凸函数 $f(x)$，起切线是紧致的下界，我们将斜率为 $\eta$ 的切线表示为 $\eta x-g(\eta)$，其中截距的负值可以表示为 $g(\eta)$ 依赖于切线的斜率。我们可以将其表示为：
+$$
+g(\eta)=-\min_x\{f(x)-\eta x\}=\max_x\{\eta x-f(x)\}
+$$
+![Convex Duality](./images/11.4.png)
+
+我们可以写出这一表达的对偶形式：
+$$
+f(x)=\max_{\eta}\{\eta x-g(\eta)\}
+$$
+对于凹函数及其上界有类似的形式：
+$$
+f(x)=\min_x\{\eta x-g(x)\}\\
+g(\eta)=\min_x\{\eta x-f(x)\}
+$$
+对于一些非凸/凹的函数，我们可以先通过可逆变换转化为凸/凹函数的形式，然后求其下/上界，例如，对于常见的 sigmoid 函数 $\sigma(x)=\frac{1}{1+e^{-x}}$，我们可以先取对数得到一个凹函数 $f(x)=-\ln(1+e^{-x})$，然后得到：
+$$
+g(\eta)=\min_x\{\eta x-f(x)\}=-\eta\ln\eta-(1-\eta)\ln(1-\eta)
+$$
+我们看到这恰好是一个二值变量的熵，这个变量取值为 1 的概率是 $\eta$，进而我们可以得到对数 sigmoid 函数的一个上界：
+$$
+\sigma(x)\leq\exp(\eta x-g(\eta))
+$$
+类似地我们可以得到其上界：
+$$
+\ln \sigma(x)=-\ln (1+e^{-x})=-\ln \{e^{-\frac{x}{2}}(e^{\frac x2}+e^{-\frac x2})\}=\frac x2-\ln(e^{\frac x2}+e^{-\frac x2})
+$$
+函数 $f(x)=\ln(e^{\frac x2}+e^{-\frac x2})$ 是变量 $x^2$  的一个线性函数，这产生了 $f(x)$ 的下界：
+$$
+g(\eta)=\max_{x^2}\{\eta x^2-f(\sqrt{x^2}\}
+$$
+根据一阶条件：
+$$
+\eta x^2-\frac{\mathrm d x}{\mathrm d x^2}\frac{\mathrm d}{\mathrm d x}f(x)=\eta+\frac{1}{4x}\tanh(\frac x2)=0 \Rightarrow \eta=-\frac{1}{4x}\tanh(\frac x2)
+$$
+我们定义：
+$$
+\lambda(\xi)=-\eta=\frac{1}{4x}\tanh(\frac x2)=\frac{1}{2\xi}\left[\sigma(\xi)-\frac 12\right]
+$$
+我们将 $\xi$ 看作变分参数，这会产生共轭函数的简化形式：
+$$
+g(\lambda(\xi))=-\lambda(\xi)\xi^2-f(\xi)=-\lambda(\xi)\xi^2+\ln(e^{\frac{\xi}{2}}+e^{-\frac{\xi}{2}})
+$$
+因此 $f(x)$ 的界限可以写作：
+$$
+f(x)\geq-\lambda(\xi)x^2-g(\lambda(\xi))=-\lambda(\xi)x^2-\lambda(\xi)\xi^2-\ln(e^{\frac{\xi}{2}}+e^{-\frac{\xi}{2}})
+$$
+那么，sigmoid 函数的下界可以写作：
+$$
+\sigma(x)\geq\sigma(\xi)\exp\left\{\frac{x-\xi}{2}-\lambda(\xi)(x^2-\xi^2)\right\}
+$$
+关于这些界限如何被使用，我们首先考虑一个一般的例子：
+$$
+I=\int\sigma(a)p(a)\mathrm a
+$$
+其中 $\sigma(a)$ 表示一个 logistic sigmoid 函数，而 $p(a)$ 表示一个 Gauss PDF，根据上面的推导，我们可以写出这个积分的变分界限：
+$$
+I\geq\int f(a,\xi)p(a)\mathrm a=F(\xi)
+$$
+积分现在转换为了两个指数-二次函数的乘积，因此可以解析地计算。
+
+我们可以自由地选择变分参数 $\xi$，通常选择最大化函数 $F(\xi)$ 的值 $\xi^*$。
+
+### 5.2 Variational Logistic Regression
+
+对于贝叶斯 logistic regression 模型，边缘似然函数的形式可以表示为：
+$$
+p(Y)=\int p(Y\mid \boldsymbol w)p(\boldsymbol w)\mathrm d\boldsymbol w=\int\left[\prod_{n=1}^N p(y_n\mid\boldsymbol w)\right]p(\boldsymbol w)\mathrm d \boldsymbol w
+$$
+首先注意到 $t$ 的条件概率分布可以写作：
+$$
+\begin{aligned}
+p(y\mid \boldsymbol w)&=\sigma(a)^t\{1-\sigma(a)\}^{1-t}\\
+&=\left(\frac{1}{1+e^{-a}}\right)^t\left(1-\frac{1}{1+e^{-a}}\right)^{1-t}\\
+&=e^{at}\frac{e^{-a}}{1+e^{-a}}=e^{at}\sigma(-a)\\
+\end{aligned}
+$$
+其中，$a=\boldsymbol w^\top \phi$，我们使用 sigmoid 函数的下界重写这个等式：
+$$
+p(y\mid \boldsymbol w)=e^{at}\sigma(-a)\geq e^{at}\sigma(\xi)\exp\left\{-\frac{a+\xi}{2}-\lambda(\xi)(a^2-\xi^2)\right\}
+$$
+进而可以写出联合概率分布的下界：
+$$
+p(Y,\boldsymbol w)=p(Y\mid \boldsymbol w)\geq h(\boldsymbol w,\boldsymbol \xi)p(\boldsymbol w)\\
+h(\boldsymbol \xi, \boldsymbol w)=\prod_{n=1}^N \sigma(\xi_n)\exp\{\boldsymbol w^\top\phi_ny_n-(\boldsymbol w^\top\phi_n+\xi_n)/2-\lambda(\xi_n)(|\boldsymbol w^\top\phi_n|^2-\xi^2_n)\}
+$$
+进而推出对数似然的下界，并通过配方法确定 $\boldsymbol w$ 的变分后验分布：
+$$
+\begin{aligned}
+\ln \{p(Y\mid \boldsymbol w)p(\boldsymbol w)\}&\geq\ln p(\boldsymbol w)+\sum_{n=1}^N\{\ln \sigma(\xi_n)+\boldsymbol w^\top\phi_ny_n-(\boldsymbol w^\top\phi_n+\xi_n)/2-\lambda(\xi_n)(|\boldsymbol w^\top\phi_n|^2-\xi_n^2)\}\\
+&\geq -\frac12(\boldsymbol w-\boldsymbol m_0)^\top\boldsymbol S_0^{-1}(\boldsymbol w-\boldsymbol m_0)+\sum_{n=1}^N\{\boldsymbol w^\top\phi_n(y_n-1/2)-\lambda(\xi_n)\boldsymbol w^\top(\phi_n\phi_n^\top)\boldsymbol w\}+\mathrm{const}
+\end{aligned}
+$$
+
+$$
+q(\boldsymbol w)\sim\mathcal{N}(\boldsymbol w\mid\boldsymbol m_N,\boldsymbol S_N)\\
+\boldsymbol m_N=\boldsymbol S_N\left(\boldsymbol S_0^{-1}\boldsymbol m_0+\sum_{n=1}^N\left(y_n-\frac12\right)\right)\\
+\boldsymbol S_N^{-1}=\boldsymbol S_0^{-1}+2\sum_{n=1}^N\lambda(\xi_n)\phi_n\phi_n^\top
+$$
+
+这样我们就得到了后验概率的一个高斯近似，相较于拉格朗日框架，变分参数提供了额外的灵活性。
+
+关于变分参数的最优化，有两种思路：
+
+- 解析地求出联合概率分布对 $\boldsymbol w$ 的积分并对其关于变分参数最大化
+- 将 $\boldsymbol w$ 看作一个潜在变量，然后使用 EM 算法迭代优化
+
+在 EM 算法中，我们首先你选择变分参数的初始值，然后在期望步骤中，使用这些参数值找到 $\boldsymbol w$ 上的后验概率分布，然后在最大化步骤中关于 $\{\xi_n\}$ 最大化完整对数似然的期望：
+$$
+Q(\boldsymbol \xi,\boldsymbol \xi^{old})=\mathbb E[\ln \{h(\boldsymbol w,\boldsymbol \xi)p(\boldsymbol \xi)\}]
+$$
+其中的期望是关于使用 $\boldsymbol \xi^{old}$ 得到的后验概率分布 $q(\boldsymbol w)$ 进行计算的，代入 $h(\boldsymbol w,\boldsymbol \xi)$ 可以得到：
+$$
+Q(\boldsymbol \xi,\boldsymbol \xi^{old})=\sum_{n=1}^N\left\{\ln\sigma(\xi_n)-\frac{\xi_n}{2}-\lambda(\xi_n)(\phi_n^\top\mathbb E[\boldsymbol w\boldsymbol w^\top]\phi_n)\right\}+\mathrm{const}\\
+$$
+关于 $\xi_n$ 求导可以得到最大化步骤中的重估计方程：
+$$
+\lambda'(\xi_n)(\phi_n^\top\mathbb E[\boldsymbol w^\top\boldsymbol w]\phi_n-\xi_n^2)=0\Rightarrow(\xi^{new}_n)^2=\phi^\top_n\mathbb E[\boldsymbol w \boldsymbol w^\top]\phi_n=\phi^\top_n(\boldsymbol S_N+\boldsymbol m_N\boldsymbol m_N^\top)\phi_n
+$$
+另一类优化方式是直接解析地计算积分，这种方法的可行性来自于被积函数的形式类似于高斯分布，用这种方式得到的冲估计方程与通过 EM 算法得到的方程一致。
+
+在变分方法中计算下界是很有意义的：
+$$
+\ln p(Y)=\ln\int p(Y\mid\boldsymbol w)p(\boldsymbol w)\mathrm d \boldsymbol w\geq\ln \int h(\boldsymbol w,\boldsymbol \xi)p(\boldsymbol w)\mathrm d \boldsymbol w=\mathcal{L}(\boldsymbol \xi)
+$$
+正如上面提到的，这个积分是可以精确计算的：
+$$
+\mathcal{L}(\boldsymbol \xi)=\frac 12\frac{|\boldsymbol S_n|}{|\boldsymbol s_0|}+\frac 12\boldsymbol m_N^\top\boldsymbol S_N^{-1}\boldsymbol m_N-\frac 12\boldsymbol m_0^\top\boldsymbol S_0^{-1}\boldsymbol m_0+\sum_{n=1}^N\left\{\ln\sigma(\xi_n)-\frac12\xi_n+\lambda(\xi_n)\xi_n^2\right\}
+$$
+关于模型的超参数估计，我们假定 $\boldsymbol w$ 有一个简单的各向同性先验 $\mathcal{N}(\boldsymbol w\mid 0, \alpha^{-1}I)$，然后考虑超参数 $\alpha$ 上的一个共轭超先验 $\mathrm{Gam}(\alpha\mid a_0,b_0)$，联合概率分布的形式可以写作：
+$$
+p(\boldsymbol w,\alpha,Y)=p(Y\mid\boldsymbol w)p(\boldsymbol w\mid \alpha)p(\alpha)
+$$
+我们不能直接计算关于 $\boldsymbol w$ 和 $\alpha$ 的积分，我们可以通过在同一个模型中使用局部和全局变分方法解决这个问题。首先，我们引入一个变分分布 $q(\boldsymbol w,\alpha)$ ，然后进行分解：
+$$
+\ln p(Y)=\mathcal{L}(q)+\mathrm{KL}(q\|p)\\
+\mathcal{L}(q)=\iint q(\boldsymbol w,\alpha)\ln\left\{\frac{p(\boldsymbol w,\alpha,Y)}{q(\boldsymbol w,\alpha)}\right\}~\mathrm d \boldsymbol w~\mathrm d \alpha\\
+\mathrm{KL}(q\|p)=-\iint q(\boldsymbol w,\alpha)\ln \left\{\frac{p(\boldsymbol w,\alpha\mid Y)}{q(\boldsymbol w,\alpha)}\right\}~\mathrm d \boldsymbol w~\mathrm d \alpha\\
+p(\boldsymbol w,\alpha,Y)=p(Y\mid \boldsymbol w)p(\boldsymbol w\mid \alpha)p(\alpha)
+$$
+由于似然因子 $p(t\mid \boldsymbol w)$ 的形式，下界仍然无法求解，因此我们考虑对每个 logistic sigmoid 因子应用一个局部的变分界限，这使得我们可以得到 $\mathcal{L}(q)$ 的下界，这个下界也是对数似然函数一个下界：
+$$
+\ln p(Y)\geq\mathcal{L}(q)\geq\widetilde{\mathcal{L}}(q,\boldsymbol \xi)=\iint q(\boldsymbol w,\alpha)\ln\left\{\frac{h(\boldsymbol w,\boldsymbol \xi)p(\boldsymbol w\mid \alpha)p(\alpha)}{q(\boldsymbol w,\alpha)}\right\}~\mathrm d\boldsymbol w~\mathrm d\alpha
+$$
+然后我们假设变分分布可以在参数和超参数之间进行分解，即：
+$$
+q(\boldsymbol w,\alpha)=q(\boldsymbol w)q(\alpha)
+$$
+根据这个结果，我们可以得到最优因子的表达式：
+$$
+\begin{aligned}
+\ln q(\boldsymbol w)&=\mathbb E[\ln\{h(\boldsymbol w,\boldsymbol \xi)p(\boldsymbol w\mid\alpha)p(\alpha)\}]+\mathrm{const}\\
+&=\ln h(\boldsymbol w,\boldsymbol \xi)+\mathbb E_\alpha[\ln p(\boldsymbol w\mid \alpha)]+\mathrm{const}\\
+&=-\frac{\mathbb E[\alpha]}{2}\boldsymbol w^\top\boldsymbol w+\sum_{n=1}^N\left\{(t_n-\frac{1}{2})\boldsymbol w^\top\phi_n-\lambda(\xi_n)\boldsymbol w^\top\phi_n\phi_n^\top\boldsymbol w\right\}+\mathrm{const}
+\end{aligned}
+$$
+由于这是一个二次函数，我们照例使用配方的方式求解：
+$$
+q(\boldsymbol w)=\mathcal{N}(\boldsymbol w\mid \boldsymbol \mu_N,\boldsymbol \Sigma_N)\\
+\boldsymbol \Sigma_N^{-1}\mu_N=\sum_{n=1}^N\left(t_n-\frac12\right)\phi_n\\
+\boldsymbol \Sigma_N^{-1}=\mathbb E[\alpha]I+2\sum_{n=1}^N\lambda(\xi_n)\phi_n\phi_n^\top\\
+$$
+类似地，可以求出 $q(\alpha)$ 是一个共轭的 Gamma 分布，其形式为：
+$$
+q(\alpha)=\mathrm{Gam}(\alpha\mid a_N,b_N)=\frac{1}{\Gamma(a_N)}a_N^{b_N}\alpha^{a_N-1}e^{-b_N\alpha}\\
+a_N = a_0+\frac M2\\
+b_N=b_0+\frac12\mathbb E_{\boldsymbol w}[\boldsymbol w^\top\boldsymbol w]
+$$
+为了优化变分参数 $\xi_n$，我们可以最大化下界 $\widetilde{\mathcal{L}}(q,\boldsymbol \xi)$，略去与 $\boldsymbol  \xi$ 无关的项，对 $\alpha$ 积分，我们有：
+$$
+\widetilde{\mathcal{L}}(q,\boldsymbol \xi)=\int q(\boldsymbol w)\ln h(\boldsymbol w,\boldsymbol \xi)~\mathrm d \boldsymbol w+\mathrm{const}
+$$
+其形式与不考虑 $\alpha$ 先验时的形式完全一致，因此可以得到相同的重估计方程：
+$$
+(\xi_m^{new})^2=\phi^\top_n(\Sigma_N+\mu_N\mu_N^\top)\phi_n
+$$
+要使用迭代的方式更新这些参数，我们还需要的矩是：
+$$
+\mathbb E[\alpha]=\frac{a_N}{b_N}\\
+\mathbb E[\boldsymbol w\boldsymbol w^\top]=\boldsymbol \Sigma_N+\mu_N\mu_N^\top
+$$
+
+## 7 Expectation Propagation
+
+期望传播是另一类确定性近似推断算法，它对 KL 散度的另一种形式 $KL(p\Vert q)$ 进行最优化

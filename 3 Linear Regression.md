@@ -459,7 +459,7 @@ $$
 $$
 整理可得：
 $$
-\alpha^*=\frac{\sum_i\frac{\lambda_i}{\lambda_i+\alpha}}{m_N^\top\boldsymbol m_N}=\frac{\gamma}{m_N^\top\boldsymbol m_N}
+\alpha^*=\frac{\sum_i\frac{\lambda_i}{\lambda_i+\alpha}}{\boldsymbol m_N^\top\boldsymbol m_N}=\frac{\gamma}{\boldsymbol m_N^\top\boldsymbol m_N}
 $$
 
 
@@ -493,3 +493,4 @@ $$
 \Lambda=\frac{M}{2E_D(\boldsymbol m_N)}\\
 $$
 这可以看作重估计公式的简化近似。
+
