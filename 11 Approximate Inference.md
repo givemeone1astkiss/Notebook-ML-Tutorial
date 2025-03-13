@@ -650,4 +650,53 @@ $$
 
 ## 7 Expectation Propagation
 
-期望传播是另一类确定性近似推断算法，它对 KL 散度的另一种形式 $KL(p\Vert q)$ 进行最优化
+期望传播是另一类确定性近似推断算法，它对 KL 散度的另一种形式 $KL(p\Vert q)$ 进行最优化。
+
+首先考虑关于 $q(z)$ 最小化 $KL(p\|q)$ 的问题，其中 $p(z)$ 是一个固定的概率分布，$q(z)$ 是指数族分布的一个成员，因此可以写作：
+$$
+q(z)=h(z)g(\boldsymbol\eta)\exp\{\boldsymbol\eta^\top\boldsymbol u(z)\}
+$$
+作为 $\boldsymbol \eta$ 的一个函数，KL 散度可以写成：
+$$
+KL(p\|q)=-\ln g(\boldsymbol\eta)-\boldsymbol\eta^\top\mathbb E_{p(z)}[\boldsymbol u(z)]+\mathrm{const}
+$$
+通过令关于 $\eta$ 的导数为零最小化 KL 散度，可以得到：
+$$
+-\nabla\ln g(\boldsymbol\eta)=\mathbb E_{p(z)}[\boldsymbol u(z)]
+$$
+由于对数配分函数的负梯度等价于充分统计量的期望，因此：
+$$
+\mathbb E_{q(z)}[\boldsymbol u(z)]=\mathbb E_{p(z)}[\boldsymbol u(z)]
+$$
+因此最优解等价于对充分统计量进行匹配，这种优化方式被称为矩匹配（moment matching）。
+
+对于许多概率模型来说，数据和隐变量（参数）$\theta$ 的联合概率分布由一组因子的乘积组成，形式为：
+$$
+p(D,\theta)=\prod_{i}f_i(\theta)
+$$
+ 例如对于独立同分布的数据的模型，对于每个数据点 $x_i$ 都有一个对应的因子 $f_n(\theta)=p(x_n\mid \theta)$，其中 $f_0(\theta)=p(\theta)$，我们感兴趣的是计算后验概率分布 $p(\theta\mid D)$ 用于预测及计算证据 $p(D)$ 用于模型比较：
+$$
+p(\theta\mid D)=\frac{1}{p(D)}\prod_i f_i(\theta)\\
+p(D)=\int\prod_if_i(\theta)~\mathrm d\theta
+$$
+为了使用期望传播的框架，我们建立一个近似后验概率分布：
+$$
+q(\theta)=\frac1Z\prod_i \widetilde{f}_i(\theta)
+$$
+
+
+其中，我们假定祭祀中的每个因子都与真实后验中的因子相对应，并对近似因子施加一些限制，一般假定其来自于指数族分布，那么归一化的因子的乘积也是指数族分布。理想情况下，我们通过最小化真实后验概率分布与近似分布之间的 KL 散度的方式确定 $\widetilde{f}_i(\theta)$：
+$$
+KL(p\|q)=KL\left(\frac{1}{p(D)}\prod_if_i(\theta)\|\frac1Z\prod_i\widetilde f_i(\theta)\right)
+$$
+这个最小化是无法直接进行的，因为 KL 散度涉及关于真实概率分布求平均。作为近似，我们可以最小化近似因子和真实因子之间的 KL 散度，这个算法相对简单且无需迭代进行。但是对每个因子独立进行近似，乘积的近似效果可能会很差。而期望传播通过在剩余因子的环境中对单个因子进行近似，因此效果好很多。
+
+在期望传播的框架中，假如我们想更新因子 $\widetilde f_j(\theta)$，我们首先将其从乘积中去除，得到 $\prod_{i\not=j}\widetilde{f}_i(\theta)$ ，然后确定一个目标因子的修正形式，使得乘积 $\widetilde f_i(\theta)\prod_{i\not=j}\widetilde f_i(\theta)$ 尽可能接近 $f_i(\theta)\prod_{i\not=j}\widetilde f_i(\theta)$，在近似的过程中我们保持其余因子不变，这使得近似在由其余因子定义的后验概率较高的区域最精确。
+
+单因子的优化过程是，首先构建 $q^{\backslash j}(\theta)=\frac{q(\theta)}{\widetilde f_j(\theta)}$ ，然后将其与真实因子结合得到 $\frac1{Z_j}f_j(\theta)q^{\backslash j}(\theta),Z_j=\int f_j(\theta)q^{\backslash j}(\theta)~\mathrm d\theta$，然后通过最小化 KL 散度 $KL\left(\frac{f_j(\theta)q^{\backslash j}(\theta)}{Z_j}\|q^{new}(\theta)\right)$，更新近似后验中的目标因子，这可以通过匹配充分统计量的方式进行，我们首先令 $q^{new}(\theta)$ 的矩等于 $f_j(\theta)q^{\backslash j}(\theta)$ 的充分统计量，然后更新之后的因子可以表示为：
+$$
+\widetilde f_j(\theta)=K\frac{q^{new}(\theta)}{q^{\backslash j}(\theta)}
+$$
+归一化因子可以表示为 $K=\int\widetilde f_i(\theta)q^{\backslash j}(\theta)~\mathrm d\theta$，通过匹配零阶矩，我们可以得到 $K=Z_j$，于是我们就可以得到更新之后的目标因子。
+
+期望传播的一个确定是其不保证迭代收敛，但是对于来自指数族分布的近似分布，如果迭代收敛，那么求得的解是特定势函数的驻点。
