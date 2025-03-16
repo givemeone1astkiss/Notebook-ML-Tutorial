@@ -254,7 +254,7 @@ $$
 $$
 \ln q^*(\pi,\mu,\Lambda)=\ln p(\pi)+\sum_{k=1}^K\ln p(\mu_k,\Lambda_k)+\mathbb{E}_Z[\ln p(Z\mid \pi)]+\sum_{k=1}^K\sum_{n=1}^N\mathbb{E}[z_{nk}]\ln \mathcal{N}(x_n\mid \mu_k,\Lambda_k^{-1})+\mathrm{const}
 $$
-等式右侧一些项只与 $\pi$ 相关，一些项只与 $\mu$ 和 $\Lambda$ 相关，只与 $\mu$ 和 $\Lambda$ 相关的项又可以分解为 $k$ 个下昂同行是的项的乘积，表明 $q(\pi,\mu,\Lambda)=q(\pi)\prod_{k=1}^Kq(\mu_k,\Lambda_k)$ 。首分离出只与 $\pi$ 相关的项：
+等式右侧一些项只与 $\pi$ 相关，一些项只与 $\mu$ 和 $\Lambda$ 相关，只与 $\mu$ 和 $\Lambda$ 相关的项又可以分解为 $K$ 个的项的乘积，表明 $q(\pi,\mu,\Lambda)=q(\pi)\prod_{k=1}^Kq(\mu_k,\Lambda_k)$ 。首先分离出只与 $\pi$ 相关的项：
 $$
 \ln q^*(\pi)=(\alpha_0-1)\sum_{k=1}^K\ln \pi_k+\sum_{k=1}^K\sum_{n=1}^Nr_{nk}\ln\pi_k+\mathrm{const}
 $$
