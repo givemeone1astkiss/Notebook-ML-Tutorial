@@ -350,3 +350,135 @@ $$
 在这种变体中，$z_{n}^{(1)}$ 和因子 $z_{n}^{(2)}$ 在节点 $x_{n}$ 处有一个 head-to-head 的观测节点，因此 d-划分不成立。此外，$z_{n-1}$ 与 $z_{n+1}$ 的关键的条件独立性质也不成立，从而⽆法独⽴地运⾏前向和后向递归。如果我们将共有 $M$ 条 $K$ 维的潜在变量链的因子 HMM 转化为标准的 HMM，潜在变量将有 $K^M$ 个维度，前向后向算法的复杂度将是 $O(NK^{2M})$，因此除了 $M$ 很小的情况外均无法计算。一些解决办法是使用采样或变分推断。
 
 ## 3 Linear Dynamical Systems
+
+如果将 HMM 看作混合模型的推广，那么线性动态系统可以看作连续潜在变量模型的推广，每对结点 $\{z_n,x_n\}$ 表示那个特定的观测下的一个线性高斯潜在变量模型，然而潜在变量 $\{z_n\}$ 不再被看作独立的，而是构成了一个马尔科夫链。
+
+由于模型由树结构的有向图表⽰，因此推断问题可以使⽤加和-乘积算法⾼效地求解。再 LDS 中，前向递归方程被称为 Kalman 滤波方程，后向递归方程被称为 Kalman 平滑方程，或者 Rauch-Tung-Striebel 方程。
+
+由于线性动态系统是⼀个线性⾼斯模型，因此在所有变量上的联合概率分布以及边缘分布和条件分布都是⾼斯分布。
+
+在 LDS 中，单独地概率最⼤的潜在变量值组成的序列与概率最⼤的潜在变量序列相同。因此对于线性动态系统，⽆需考虑与维特⽐算法类似的算法。
+
+由于模型的条件概率分布是⾼斯分布，因此我们可以将转移分布和发射分布写成⼀般的形式：
+$$
+p(z_n\mid z_{n-1})=\mathcal{N}(z_n\mid Az_{n-1},\Gamma)\\
+p(x_n\mid z_n)=\mathcal{N}(x_m\mid Cz_n,\Sigma)
+$$
+ 潜在变量的初始分布也服从高斯分布：
+$$
+p(z_1)=\mathcal{N}(z_1\mid \mu_0,P_0)
+$$
+我们也可以将这些概率分布表示为噪声线性方程的形式：
+$$
+z_n=Az_{n-1}+w_n,w_n\sim\mathcal{N}(w\mid1,\Gamma)\\
+x_n=Cz_n+v_n,v\sim\mathcal{N}(v\mid 0,\Sigma)\\
+z_1=\mu_0+u,u\sim\mathcal{N}(u\mid0,P_0)
+$$
+模型的参数可以表示为 $\theta=\{A,\Gamma,C,\Sigma,\mu_0,P_0\}$，可以通过 EM 算法使用极大似然的方式确定，在 E 步骤中需要求解确定潜在变量的局部后验边缘概率的推断问题，这可以通过加和-乘积算法高效地进行。
+
+### 3.1 Inference in LDS
+
+首先考虑考虑通过加和-乘积算法寻找以观测序列为条件的潜在变量的边缘概率分布的问题，这在 LDS 中会导出 Kalman 滤波⽅程和 Kalman 平滑⽅程。
+
+对于 LDS 中的前向算法，即 Kalman 滤波过程，我们传递的信息是归一化的边缘概率分布，同时是一个高斯分布：
+$$
+\hat\alpha(z_n)=\mathcal{N}(z_n\mid \mu_n,V_n)
+$$
+前行过程的递推公式与 HMM 中一致，唯一的区别是由于此时潜在状态是连续变量，所以要使用积分代替求和：
+$$
+c_m\hat\alpha(z_n)=p(x_n\mid z_n)\int\hat\alpha(z_{n-1})p(z_n\mid z_{n-1})\mathrm ~dz_{n-1}
+$$
+我们将式中的概率分布替换为对应的高斯分布的形式：
+$$
+c_n\mathcal N(z_n\mid \mu_n,V_n)=\mathcal N(x_n\mid Cz_n.\Sigma)\int\mathcal N(z_n\mid Az_{n-1},\Gamma)\mathcal N(z_{n-1}\mid \mu_{n-1},V_{n-1})~\mathrm dz_{n-1}
+$$
+其中：
+$$
+\int\mathcal N(z_n\mid Az_{n-1},\Gamma)\mathcal N(z_{n-1}\mid \mu_{n-1},V_{n-1})~\mathrm dz_{n-1}=\mathcal N(Z_n\mid A\mu_{n-1},P_{n-1})\\
+P_{n-1}=AV_{n-1}A^\top+\Gamma
+$$
+我们现在将这个结果代入迭代式：
+$$
+\mu_n=A\mu_{n-1}+K_n(x_n-CA\mu_{n-1})\\
+V_n=(I-K_nC)P_{n-1}\\
+c_n=\mathcal N(x_n\mid CA\mu_{n-1},CP_{n-1}C^\top+\Sigma)\\
+K_n=P_{n-1}C^\top(CP_{n-1}C^\top+\Sigma)^{-1}
+$$
+可以将隐含变量分布的均值的更新⽅程看作预测分布的均值 $A\mu_{n-1}$ 加上一个修正项，该修正项正比于预测观测与实际观测之间的误差 $x_n-CA\mu_{n-1}$ ，修正的系数由 Kalman 增益矩阵 $K_n$ 给出。
+
+迭代的初始条件是：
+$$
+c_1\hat\alpha(z_1)=p(z_1)p(x_1\mid z_1)\\
+\mu_1=\mu_0+K_1(x_1-C\mu_0)\\
+V_1=(I-K_1C)P_0\\
+c_1=\mathcal N(x_1\mid C\mu_0,CP_0C^\top+\Sigma)\\
+K_1=P_0C^\top(CP_0C^\top+\Sigma)^{-1}
+$$
+接下来我们考虑求解 $\gamma(z_n)=p(z_n\mid X)$，在 LDS 中，我们通常使用 $\gamma(z_n)=\hat\alpha(z_n)\hat\beta(z_n)$ 表示后向递推公式，而不是根据 $\hat\beta(z_n)$，由于 $\gamma(z_n)$ 本身也是高斯分布，我们有：
+$$
+\gamma(z_n)=\hat\alpha(z_n)\hat\beta(z_n)=\mathcal N(z_n\mid \hat\mu_n,\hat V_n)
+$$
+首先类比 HMM 的后向算法，对于连续潜在变量的情况，我们有：
+$$
+c_{n+1}\hat\beta(z_n)=\int\hat\beta(z_{n+1})p(x_{n+1}\mid z_{n+1})p(z_{n+1}\mid z_n)~\mathrm dz_{n+1}
+$$
+在两侧乘以 $\alpha(z_n)$，然后代入各分布的具体形式，经过推导我们可以得到：
+$$
+\hat\mu_n=\mu_n+J_n(\hat\mu_{n+1}+A\mu_n)\\
+\hat V_n=V_n+J_n(\hat V_{n+1}-P_n)J_n^\top\\
+J_n=V_nA^\top(P_n)^{-1}
+$$
+这些递归方程要求首先完成前向过程，从而为后向过程提供 $\mu_n$ 和 $V_n$。
+
+类似地，我们可以求出一对变量的后验边缘分布：
+$$
+\begin{aligned}
+\xi(z_{n-1},z_n)&=(c_n)^{-1}\hat\alpha(z_{n-1})p(x_n\mid z_n)p(z_n\mid z_{n-1})\hat\beta(z_n)\\
+&=\frac{\mathcal N(z_{n-1}\mid \mu_{n-1},V_{n-1})\mathcal N(z_n\mid Az_{n-1},\Gamma)\mathcal N(x_n\mid Cz_n,\Sigma)\mathcal N(z_n\mid \hat\mu_n,\hat V_n)}{c_n\hat\alpha(z_n)}
+\end{aligned}
+$$
+由于 $\xi(z_{n-1},z_n)$ 是一个高斯分布，整理之后可以得到其均值为 $[\hat\mu_{n-1},\hat\mu_n]^\top$，协方差为 $\mathrm{cov}[z_{n-1},z_n]=J_{n-1}\hat V_n$ 。
+
+### 3.2 Learning in LDS
+
+LDS 的学习可以通过 EM 算法进行，对于前一轮迭代得到的参数 $\theta^{old}$，我们可以从中得到：
+$$
+\mathbb E[z_n]=\hat\mu_n\\
+\mathbb E[z_nz^\top_{n-1}]=\hat V_nJ^\top_{n-1}+\hat\mu_n\hat\mu^\top_{n-1}\\
+\mathbb E[z_nz_n^\top]=\hat V_n+\hat\mu_n\hat\mu^\top_n
+$$
+然后我们推导完整数据的对数似然函数，与 HMM 类似：
+$$
+\ln p(X,Z\mid \theta)=\ln p(z_1\mid \mu_0,P_0)+\sum_{n=2}^N\ln p(z_n\mid z_{n-1},A,\Gamma)+\sum_{n=1}^N\ln p(x_n\mid z_n,C,\Sigma)
+$$
+而 EM 算法涉及优化其在 $p(Z\mid X,\theta^{old})$ 下的期望，如果我们首先代入 $p(z_1\mid \mu_0,P_0)$ 的具体形式，然后取期望：
+$$
+Q(\theta,\theta^{old})=-\frac12\ln|P_0|-\mathbb E_{Z\mid \theta^{old}}\left[\frac12(z_1-\mu_0)^\top P_0^{-1}(z_1-\mu_0)\right]+\mathrm{const}\\
+$$
+关于 $\mu_0$ 和 $V_0$ 对期望进行最大化，得到更新公式：
+$$
+\mu_0^{new}=\mathbb E[z_1]\\
+V_0^{new}=\mathbb E[z_1z_1^\top]-\mathbb E[z_1]\mathbb E[z_1^\top]\\
+$$
+类似地，我们代入 $p(z_n\mid z_{n-1},A,\Gamma)$ 的形式，然后取期望：
+$$
+Q(\theta,\theta^{old})=-\frac{N-1}{2}\ln|\Gamma|-\mathbb E_{Z\mid\theta^{old}}\left[\frac12\sum_{n=2}^N(z_n-Az_{n-1})^\top\Gamma^{-1}(z_n-Az_{n-1})\right]+\mathrm{const}
+$$
+进行最大化：
+$$
+A^{new}=\left(\sum_{n=2}^N\mathbb E[z_nz_{n-1}^\top]\right)\left(\sum_{n=2}^N\mathbb E[z_{n-1}z_{n-1}^\top]\right)^{-1}\\
+\Gamma^{new}=\frac1{N-1}\sum^N_{n=2}\left\{\mathbb E[z_nz_n^\top]-A^{new}\mathbb E[z_{n-1}z_n^\top]-E[z_nz_{n-1}^\top](A^{new})^\top+A^{new}\mathbb E[z_{n-1}z_{n-1}^\top](A^{new})^\top\right\}
+$$
+最后我们代入 $p(x_n\mid z_n,C,\Sigma)$ 的具体形式：
+$$
+Q(\theta,\theta^{old})=-\frac N2\ln|\Sigma|-\mathbb E_{Z\mid\theta^{old}}\left[\frac12(x_n-Cz_n)^\top\Sigma^{-1}(x_n-Cz_n)\right]+\mathrm{const}
+$$
+进行最大化：
+$$
+C^{new}=\left(\sum_{n=1}^Nx_n\mathbb E[z_n^\top]\right)\left(\sum_{n=1}^Nx_n\mathbb E[z_nz_n^\top]\right)^{-1}\\
+\Sigma^{new}=\frac 1N\sum_{n=1}^N\{x_nx_n^\top-C^{new}\mathbb E[z_n]x_n^\top-x_n\mathbb E[z_n^\top](C^{new})^\top+C^{new}\mathbb E[z_nz_n^\top](C^{new})^\top\}
+$$
+
+### 3.3 Particle Filtering
+
+对于没有线性⾼斯分布的动态系统，例如使用⾮⾼斯发射概率密度的动态系统，为了得到一个可以计算的推断算法，我们使⽤采样算法。可以使用采样-重要性-重采样算法，得到一个顺序的蒙特卡洛算法，这个特定的算法被称为粒子滤波（particle filtering）。
