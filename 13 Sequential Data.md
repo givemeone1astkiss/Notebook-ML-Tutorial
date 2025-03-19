@@ -458,7 +458,7 @@ $$
 关于 $\mu_0$ 和 $V_0$ 对期望进行最大化，得到更新公式：
 $$
 \mu_0^{new}=\mathbb E[z_1]\\
-V_0^{new}=\mathbb E[z_1z_1^\top]-\mathbb E[z_1]\mathbb E[z_1^\top]\\
+V_0^{new}=\mathbb E[z_1z_1^\top]-\mathbb E[z_1]\mathbb E[z_1^\top]\\
 $$
 类似地，我们代入 $p(z_n\mid z_{n-1},A,\Gamma)$ 的形式，然后取期望：
 $$
@@ -481,4 +481,31 @@ $$
 
 ### 3.3 Particle Filtering
 
-对于没有线性⾼斯分布的动态系统，例如使用⾮⾼斯发射概率密度的动态系统，为了得到一个可以计算的推断算法，我们使⽤采样算法。可以使用采样-重要性-重采样算法，得到一个顺序的蒙特卡洛算法，这个特定的算法被称为粒子滤波（particle filtering）。
+对于没有线性⾼斯分布的动态系统，例如使用非高斯发射概率密度的动态系统，为了得到一个可以计算的推断算法，我们使⽤采样算法。可以使用采样-重要性-重采样算法，得到一个顺序的蒙特卡洛算法，这个特定的算法被称为粒子滤波（particle filtering）。
+
+假设我们希望从后验分布 $p(z_n\mid X)$ 中抽取 $L$ 个样本，使用贝叶斯定理，有：
+$$
+\begin{aligned}
+\mathbb E[f(z_n)]&=\int f(z_n)p(z_n\mid X_n)~\mathrm dz_n\\
+&=\int f(z_n)p(z_n\mid x_n,X_{n-1})~\mathrm dz_n\\
+&=\frac{\int f(z_n)p(x_n\mid z_n)p(z_n\mid X_{n-1})~\mathrm dz_n}{\int p(x_n\mid z_n)p(z_n\mid X_{n-1})~\mathrm dz_n}\\
+&\simeq\sum_{l=1}^L w_n^{(l)}f(z_n^{(l)})\\
+\end{aligned}
+$$
+$\{z_n^{(l)}\}$ 是从 $p(z_n\mid X_{n-1})$ 中抽取的一组样本，$f(\sdot)$ 是一个与 $z_n$ 有关的函数，例如其可以直接为 $f(z_n)=z_n$，表示模型直接估计潜在状态，采样权值 $\{w_n^{(l)}\}$ 的定义是：
+$$
+w_n^{(l)}=\frac{p(x_n\mid z_n^{(l)})}{\sum_{m=1}^Lp(x_n\mid z_n^{(m)})}
+$$
+因此后验概率分布由样本集合 $\{z_n^{(l)}\}$ 以及对应的权值 $\{w_n^{(l)}\}$ 表示，由于我们希望找到一个顺序采样的方法，因此我们假设在时刻 $n$ 已经得到了一组样本和一组权值，并且我们顺序地观测到了 $x_{n+1}$ 的值，我们希望得到 $n+1$ 时刻的权值和样本我们首先从 $p(z_{n+1}\mid X_n)$ 中采样：
+$$
+\begin{aligned}
+p(z_{n+1}\mid X_n)&=\int p(z_{n+1}\mid z_n,X_n)p(z_n\mid X_n)~\mathrm dz_n\\
+&=\int p(z_{n+1}\mid z_n)p(z_n\mid X_n)~\mathrm dz_n\\
+&=\int p(z_{n+1}\mid z_n)p(z_n\mid x_n,X_{n-1})~\mathrm dz_n\\
+&=\frac{\int p(z_{n+1}\mid z_n)p(x_n\mid z_n)p(z_n\mid X_{n-1})~\mathrm dz_n}{\int p(x_n\mid z_n)p(z_n\mid X_{n-1})~\mathrm dz_n}\\
+&=\sum_lw_n^{(l)}p(z_{n+1}\mid z_n^{(l)})\\
+\end{aligned}
+$$
+粒子滤波算法可以分成两个阶段，在时刻 $n$，我们有一个后验概率 $p(z_n\mid X_n)$ 的样本表示，它根据 $\{z_n^{(l)}\}$ 和对应的权值 $\{w_n^{(l)}\}$ 表示，为了得到下一个时刻对应的表示，我们首先从近似的 $p(z_{n+1}\mid X_n)$ 中抽取 $L$ 个样本，对于每个样本，我们使用新的观测 $x_{n+1}$ 计算对应的权值 $w_{n+1}^{(l)}\propto p(x_{n+1}\mid z_{n+1}^{(l)})$。
+
+![particle filtering](./images/13.8.png)
